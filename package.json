@@ -9,9 +9,12 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@t3-oss/env-nextjs": "^0.13.8",
+    "@workos-inc/authkit-nextjs": "^2.5.0",
+    "next": "15.5.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "next": "15.5.2"
+    "zod": "^4.1.3"
   },
   "devDependencies": {
     "typescript": "^5",
