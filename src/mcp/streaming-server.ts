@@ -1,230 +1,95 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { env } from '@/env'
+import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import {
-  ListResourcesRequestSchema,
-  ReadResourceRequestSchema,
-  ListToolsRequestSchema,
-  CallToolRequestSchema,
-} from "@modelcontextprotocol/sdk/types.js";
-import { z } from "zod";
+	CallToolRequestSchema,
+	InitializeRequestSchema,
+	ListToolsRequestSchema,
+} from '@modelcontextprotocol/sdk/types.js'
+import { WorkOS } from '@workos-inc/node'
+import { z } from 'zod'
 
 export interface McpServerContext {
-  userId?: string;
-  organizationId?: string;
-  userEmail?: string;
+	userId?: string
+}
+
+const SERVER_INFO = {
+	name: 'streaming-mcp-server',
+	version: '1.0.0',
+	description: 'A simple HTTP streaming MCP server with WorkOS authentication',
 }
 
 export class StreamingMcpServer {
-  private server: Server;
+	private server: Server
 
-  constructor() {
-    this.server = new Server(
-      {
-        name: "streaming-mcp-server",
-        version: "1.0.0",
-        description: "A simple HTTP streaming MCP server with WorkOS authentication",
-      },
-      {
-        capabilities: {
-          resources: {
-            subscribe: false,
-            templates: false,
-          },
-          tools: {},
-        },
-      }
-    );
+	constructor() {
+		this.server = new Server(SERVER_INFO, { capabilities: { tools: {} } })
+		this.setupHandlers()
+	}
 
-    this.setupHandlers();
-  }
+	private async createUserProfile(context: McpServerContext) {
+		const userId = context?.userId
 
-  private setupHandlers() {
-    // List available resources
-    this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
-      return {
-        resources: [
-          {
-            uri: "user://profile",
-            mimeType: "application/json",
-            name: "User Profile",
-            description: "Current authenticated user's profile information",
-          },
-          {
-            uri: "user://organization",
-            mimeType: "application/json", 
-            name: "User Organization",
-            description: "Current user's organization details",
-          },
-        ],
-      };
-    });
+		let userData = {
+			userId,
+		}
 
-    // Read specific resources
-    this.server.setRequestHandler(ReadResourceRequestSchema, async (request, extra) => {
-      const context = extra?._meta as McpServerContext;
-      const { uri } = request.params;
+		if (userId) {
+			const workos = new WorkOS(env.WORKOS_API_KEY)
 
-      switch (uri) {
-        case "user://profile":
-          return {
-            contents: [
-              {
-                uri,
-                mimeType: "application/json",
-                text: JSON.stringify({
-                  userId: context?.userId || "unknown",
-                  email: context?.userEmail || "unknown",
-                  authenticated: !!context?.userId,
-                  timestamp: new Date().toISOString(),
-                }, null, 2),
-              },
-            ],
-          };
+			const user = await workos.userManagement.getUser(userId)
+			userData = { ...userData, ...user }
+		}
 
-        case "user://organization":
-          return {
-            contents: [
-              {
-                uri,
-                mimeType: "application/json",
-                text: JSON.stringify({
-                  organizationId: context?.organizationId || "none",
-                  userId: context?.userId || "unknown",
-                  timestamp: new Date().toISOString(),
-                }, null, 2),
-              },
-            ],
-          };
+		return userData
+	}
 
-        default:
-          throw new Error(`Resource not found: ${uri}`);
-      }
-    });
+	private setupHandlers() {
+		this.server.setRequestHandler(InitializeRequestSchema, async () => ({
+			protocolVersion: '2024-11-05',
+			capabilities: { tools: {} },
+			serverInfo: SERVER_INFO,
+		}))
 
-    // List available tools
-    this.server.setRequestHandler(ListToolsRequestSchema, async () => {
-      return {
-        tools: [
-          {
-            name: "echo",
-            description: "Echo back a message with user context",
-            inputSchema: {
-              type: "object",
-              properties: {
-                message: {
-                  type: "string",
-                  description: "Message to echo back",
-                },
-              },
-              required: ["message"],
-            },
-          },
-          {
-            name: "get_user_info",
-            description: "Get authenticated user information",
-            inputSchema: {
-              type: "object",
-              properties: {},
-            },
-          },
-          {
-            name: "timestamp",
-            description: "Get current server timestamp",
-            inputSchema: {
-              type: "object",
-              properties: {},
-            },
-          },
-        ],
-      };
-    });
+		this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
+			tools: [
+				{
+					name: 'echo',
+					description: 'Echo back a message with user context',
+					inputSchema: {
+						type: 'object',
+						properties: { message: { type: 'string', description: 'Message to echo back' } },
+						required: ['message'],
+					},
+				},
+				{
+					name: 'get_user_info',
+					description: 'Get authenticated user information',
+					inputSchema: { type: 'object', properties: {} },
+				},
+			],
+		}))
 
-    // Handle tool calls
-    this.server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
-      const context = extra?._meta;
-      const { name, arguments: args } = request.params;
-      console.log(context)
+		this.server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
+			const context = extra?._meta as McpServerContext
+			const { name, arguments: args } = request.params
 
-      switch (name) {
-        case "echo":
-          const echoArgs = z.object({ message: z.string() }).parse(args);
-          return {
-            content: [
-              {
-                type: "text",
-                text: `Echo: ${echoArgs.message}\nUser: ${context?.userEmail || "unknown"}\nOrg: ${context?.organizationId || "none"}`,
-              },
-            ],
-          };
+			const createTextContent = (text: string) => ({ content: [{ type: 'text' as const, text }] })
 
-        case "get_user_info":
-          return {
-            content: [
-              {
-                type: "text", 
-                text: JSON.stringify({
-                  userId: context?.userId || "unknown",
-                  email: context?.userEmail || "unknown",
-                  organizationId: context?.organizationId || "none",
-                  authenticated: !!context?.userId,
-                  timestamp: new Date().toISOString(),
-                }, null, 2),
-              },
-            ],
-          };
+			switch (name) {
+				case 'echo':
+					const { message } = z.object({ message: z.string() }).parse(args)
+					return createTextContent(`"${message}"`)
 
-        case "timestamp":
-          return {
-            content: [
-              {
-                type: "text",
-                text: `Current server time: ${new Date().toISOString()}`,
-              },
-            ],
-          };
+				case 'get_user_info':
+					return createTextContent(JSON.stringify(await this.createUserProfile(context), null, 2))
 
-        default:
-          throw new Error(`Tool not found: ${name}`);
-      }
-    });
-  }
+				default:
+					throw new Error(`Tool not found: ${name}`)
+			}
+		})
+	}
 
-  getServer() {
-    return this.server;
-  }
-
-  async handleRequest(method: string, params: unknown, context: McpServerContext): Promise<unknown> {
-    const extra = { _meta: context };
-    
-    switch (method) {
-      case "resources/list":
-        const listHandler = (this.server as unknown as { _requestHandlers?: Map<string, (req: unknown, extra: unknown) => Promise<unknown>> })._requestHandlers?.get?.("resources/list");
-        if (listHandler) {
-          return await listHandler({ method, params }, extra);
-        }
-        break;
-        
-      case "resources/read":
-        const readHandler = (this.server as unknown as { _requestHandlers?: Map<string, (req: unknown, extra: unknown) => Promise<unknown>> })._requestHandlers?.get?.("resources/read");
-        if (readHandler) {
-          return await readHandler({ method, params }, extra);
-        }
-        break;
-        
-      case "tools/list":
-        const toolsListHandler = (this.server as unknown as { _requestHandlers?: Map<string, (req: unknown, extra: unknown) => Promise<unknown>> })._requestHandlers?.get?.("tools/list");
-        if (toolsListHandler) {
-          return await toolsListHandler({ method, params }, extra);
-        }
-        break;
-        
-      case "tools/call":
-        const toolsCallHandler = (this.server as unknown as { _requestHandlers?: Map<string, (req: unknown, extra: unknown) => Promise<unknown>> })._requestHandlers?.get?.("tools/call");
-        if (toolsCallHandler) {
-          return await toolsCallHandler({ method, params }, extra);
-        }
-        break;
-    }
-    
-    throw new Error(`Method not implemented: ${method}`);
-  }
+	get mcpServer() {
+		return this.server
+	}
 }

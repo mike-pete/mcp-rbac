@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     headers: {
       "Content-Type": "application/json",
       "Cache-Control": "public, max-age=3600",
-      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Origin": "*", // todo: might want to restrict this in the future
       "Access-Control-Allow-Methods": "GET, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type, Authorization",
     },
@@ -25,7 +25,7 @@ export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {
-      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Origin": "*", // todo: might want to restrict this in the future
       "Access-Control-Allow-Methods": "GET, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type, Authorization",
     },
