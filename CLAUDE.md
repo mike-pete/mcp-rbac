@@ -1,0 +1,1 @@
+- we are building an http streaming mcp server NOT SSE!
