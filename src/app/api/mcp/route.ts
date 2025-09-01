@@ -70,35 +70,13 @@ export async function POST(request: NextRequest) {
 
 const corsHeaders = {
 	'Content-Type': 'application/json',
-	'Access-Control-Allow-Origin': '*',
+	'Access-Control-Allow-Origin': '*', // todo: might want to restrict this in the future
 	'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 	'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 }
 
 export async function GET(request: NextRequest) {
 	return withMcpAuth(request, async (authRequest: AuthenticatedRequest) => {
-		const { searchParams } = new URL(authRequest.url)
-		const { mcpContext } = authRequest
-
-		if (searchParams.get('action') === 'health') {
-			return NextResponse.json(
-				{
-					status: 'healthy',
-					server: 'streaming-mcp-server',
-					version: '1.0.0',
-					protocol: '2024-11-05',
-					transport: 'http',
-					user: {
-						id: mcpContext.userId,
-						email: mcpContext.userEmail,
-						organizationId: mcpContext.organizationId,
-					},
-					timestamp: new Date().toISOString(),
-				},
-				{ headers: corsHeaders }
-			)
-		}
-
 		return NextResponse.json(
 			{
 				name: 'streaming-mcp-server',
@@ -106,16 +84,11 @@ export async function GET(request: NextRequest) {
 				description: 'HTTP streaming MCP server with WorkOS authentication',
 				protocol: '2024-11-05',
 				transport: 'http',
-				endpoints: { messages: '/api/mcp (POST)', health: '/api/mcp?action=health (GET)' },
+				endpoints: { messages: '/api/mcp (POST)' },
 				authentication: {
 					type: 'oauth2',
 					bearer_token_required: true,
 					authorization_server: env.WORKOS_AUTHKIT_DOMAIN,
-				},
-				user: {
-					id: mcpContext.userId,
-					email: mcpContext.userEmail,
-					organizationId: mcpContext.organizationId,
 				},
 			},
 			{ headers: corsHeaders }
