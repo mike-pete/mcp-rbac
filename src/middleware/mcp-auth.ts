@@ -12,13 +12,6 @@ const JWKS = createRemoteJWKSet(new URL(`${env.WORKOS_AUTHKIT_DOMAIN}/oauth2/jwk
 
 type AuthResult = { isValid: boolean; context?: McpServerContext; error?: string }
 
-const createWWWAuthenticateHeader = (baseUrl: string) =>
-	[
-		'Bearer error="unauthorized"',
-		'error_description="Authorization needed"',
-		`resource_metadata="${baseUrl}/.well-known/oauth-protected-resource"`,
-	].join(', ')
-
 interface UserContext {
 	id?: string
 	sub?: string
@@ -67,7 +60,11 @@ const createAuthErrorResponse = (error: string, baseUrl: string, status = 401) =
 		{
 			status,
 			headers: {
-				'WWW-Authenticate': createWWWAuthenticateHeader(baseUrl),
+				'WWW-Authenticate': [
+					'Bearer error="unauthorized"',
+					'error_description="Authorization needed"',
+					`resource_metadata="${baseUrl}/.well-known/oauth-protected-resource"`,
+				].join(', '),
 				'Content-Type': 'application/json',
 			},
 		}

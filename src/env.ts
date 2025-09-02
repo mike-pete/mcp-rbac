@@ -10,7 +10,7 @@ export const env = createEnv({
 		WORKOS_CLIENT_ID: z.string().startsWith('client_'),
 		WORKOS_API_KEY: z.string().startsWith('sk_test_'),
 		WORKOS_COOKIE_PASSWORD: z.string(),
-		WORKOS_AUTHKIT_DOMAIN: z.string().url(),
+		WORKOS_AUTHKIT_DOMAIN: z.url(),
 	},
 	/*
 	 * Environment variables available on the client (and server).

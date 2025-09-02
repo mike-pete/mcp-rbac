@@ -76,7 +76,7 @@ const corsHeaders = {
 }
 
 export async function GET(request: NextRequest) {
-	return withMcpAuth(request, async (authRequest: AuthenticatedRequest) => {
+	return withMcpAuth(request, async () => {
 		return NextResponse.json(
 			{
 				name: 'streaming-mcp-server',
