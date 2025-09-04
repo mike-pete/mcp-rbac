@@ -1,5 +1,6 @@
-import { getSignUpUrl, signOut, withAuth } from '@workos-inc/authkit-nextjs'
+import { getSignUpUrl, withAuth } from '@workos-inc/authkit-nextjs'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 
 export default async function HomePage() {
 	// Retrieves the user from the session or returns `null` if no user is signed in
@@ -10,24 +11,27 @@ export default async function HomePage() {
 
 	if (!user) {
 		return (
-			<>
-				<a href='/login'>Sign in</a>
-				<Link href={signUpUrl}>Sign up</Link>
-			</>
+			<div className='flex items-center justify-center h-screen'>
+				<div className='flex flex-row items-center justify-center font-black text-xl rounded-full'>
+					<a
+						href='/login'
+						className='pr-2 bg-red-300 flex justify-end items-center w-[100px] h-[200px] rounded-l-full hover:bg-red-400 transition-colors duration-150'
+					>
+						ENTER
+					</a>
+					<div className='absolute w-[40px] rotate-90'>
+						<hr className='border-0.5' />
+					</div>
+					<Link
+						href={signUpUrl}
+						className='pl-2 bg-red-300 flex justify-start items-center w-[100px] h-[200px] rounded-r-full hover:bg-red-400 transition-colors duration-150'
+					>
+						JOIN
+					</Link>
+				</div>
+			</div>
 		)
 	}
 
-	return (
-		<>
-			<form
-				action={async () => {
-					'use server'
-					await signOut()
-				}}
-			>
-				<p>Welcome back{user.firstName && `, ${user.firstName}`}</p>
-				<button type='submit'>Sign out</button>
-			</form>
-		</>
-	)
+	return redirect('/dashboard')
 }
