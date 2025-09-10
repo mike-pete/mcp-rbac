@@ -7,7 +7,7 @@ export default async function UserAvatar() {
 	const profilePictureUrl = user?.profilePictureUrl
 
 	return (
-		<Avatar.Root className='inline-flex size-10 items-center justify-center overflow-hidden rounded-md select-none text-red-950 bg-red-300'>
+		<Avatar.Root className='inline-flex size-12 items-center justify-center overflow-hidden rounded-md select-none text-red-950 bg-red-300'>
 			{profilePictureUrl ? (
 				<Avatar.Image
 					src={profilePictureUrl}
