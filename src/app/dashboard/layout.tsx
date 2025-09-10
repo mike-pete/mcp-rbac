@@ -17,11 +17,11 @@ async function Sidebar() {
 	const name = (user?.firstName ?? '') + (user?.lastName ?? '')
 
 	return (
-		<Col className='w-52 bg-neutral-950 h-screen border-neutral-800 border-r-2 sticky top-0 p-2'>
-			<Row className='gap-2'>
+		<Col className='w-64 bg-neutral-950 h-screen border-neutral-800 border-r-2 sticky top-0 p-2.5'>
+			<Row className='gap-2.5'>
 				<UserAvatar />
-				<Col className='gap-0 items-start'>
-					{name && <p className='text-sm font-bold'>{name}</p>}
+				<Col className='gap-0.5 items-start'>
+					{name && <p className='text-base font-bold'>{name}</p>}
 					<form
 						className='contents'
 						action={async () => {
@@ -29,7 +29,7 @@ async function Sidebar() {
 							await signOut()
 						}}
 					>
-						<button type='submit' className='text-red-300 text-xs'>
+						<button type='submit' className='text-red-300 text-sm'>
 							Sign out
 						</button>
 					</form>
