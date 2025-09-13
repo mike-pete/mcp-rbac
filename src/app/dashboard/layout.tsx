@@ -1,4 +1,5 @@
 import { signOut, withAuth } from '@workos-inc/authkit-nextjs'
+import Link from 'next/link'
 import UserAvatar from '../components/Avatar'
 import Col from '../components/Col'
 import Row from '../components/Row'
@@ -17,7 +18,7 @@ async function Sidebar() {
 	const name = (user?.firstName ?? '') + (user?.lastName ?? '')
 
 	return (
-		<Col className='w-64 bg-neutral-950 h-screen border-neutral-800 border-r-2 sticky top-0 p-2.5'>
+		<Col className='w-64 bg-neutral-950 h-screen border-neutral-800 border-r-2 sticky top-0 p-2.5 gap-4'>
 			<Row className='gap-2.5'>
 				<UserAvatar />
 				<Col className='gap-0.5 items-start'>
@@ -35,6 +36,23 @@ async function Sidebar() {
 					</form>
 				</Col>
 			</Row>
+			
+			<nav>
+				<Col className='gap-1'>
+					<Link 
+						href="/dashboard/market" 
+						className='px-3 py-2 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-md transition-colors'
+					>
+						MCP Marketplace
+					</Link>
+					<Link 
+						href="/dashboard" 
+						className='px-3 py-2 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-md transition-colors'
+					>
+						My MCPs
+					</Link>
+				</Col>
+			</nav>
 		</Col>
 	)
 }

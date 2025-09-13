@@ -14,7 +14,10 @@
       "WebFetch(domain:spec.modelcontextprotocol.io)",
       "mcp__convex__status",
       "mcp__convex__tables",
-      "Bash(npx convex dev:*)"
+      "Bash(npx convex dev:*)",
+      "mcp__workos__workos_search",
+      "mcp__workos__workos_docs",
+      "Bash(npm run lint)"
     ],
     "deny": []
   }

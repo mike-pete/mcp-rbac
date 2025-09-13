@@ -4,8 +4,10 @@ import { mutation, query } from './_generated/server'
 export const addMcpServer = mutation({
 	args: {
 		userId: v.string(),
+		organizationId: v.string(),
 		serverName: v.string(),
 		serverUrl: v.string(),
+		description: v.optional(v.string()),
 	},
 	handler: async (ctx, args) => {
 		// Check if server with same name already exists for this user
@@ -20,8 +22,10 @@ export const addMcpServer = mutation({
 
 		const serverId = await ctx.db.insert('mcpServers', {
 			userId: args.userId,
+			organizationId: args.organizationId,
 			serverName: args.serverName,
 			serverUrl: args.serverUrl,
+			description: args.description,
 			createdAt: Date.now(),
 		})
 
@@ -61,18 +65,33 @@ export const getMcpServers = query({
 	},
 })
 
+export const listOrganizationServers = query({
+	args: {
+		organizationId: v.string(),
+	},
+	handler: async (ctx, args) => {
+		const servers = await ctx.db
+			.query('mcpServers')
+			.filter((q) => q.eq(q.field('organizationId'), args.organizationId))
+			.collect()
+
+		return servers
+	},
+})
+
 export const updateMcpServer = mutation({
 	args: {
 		id: v.id('mcpServers'),
 		serverName: v.optional(v.string()),
 		serverUrl: v.optional(v.string()),
+		description: v.optional(v.string()),
 	},
 	handler: async (ctx, args) => {
 		const { id, ...updates } = args
 		
 		// Remove undefined values
 		const cleanUpdates = Object.fromEntries(
-			Object.entries(updates).filter(([_, value]) => value !== undefined)
+			Object.entries(updates).filter(([, value]) => value !== undefined)
 		)
 
 		if (Object.keys(cleanUpdates).length === 0) {
