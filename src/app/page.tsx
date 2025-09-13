@@ -33,5 +33,5 @@ export default async function HomePage() {
 		)
 	}
 
-	return redirect('/dashboard')
+	return redirect('/mcp')
 }

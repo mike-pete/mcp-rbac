@@ -23,6 +23,12 @@ export default function DashboardPage() {
 		userId ? { userId } : 'skip'
 	)
 
+	// Fetch organization servers
+	const organizationServers = useQuery(
+		api.mcpServers.listOrganizationServers,
+		primaryOrganization ? { organizationId: primaryOrganization.id } : 'skip'
+	)
+
 	// Mutations
 	const addServer = useMutation(api.mcpServers.addMcpServer)
 	const deleteServer = useMutation(api.mcpServers.deleteMcpServer)
@@ -144,7 +150,7 @@ export default function DashboardPage() {
 				</form>
 			</div>
 
-			{/* Server List */}
+			{/* My Server List */}
 			<div className="bg-neutral-800 rounded-lg shadow p-6">
 				<h2 className="text-xl font-semibold mb-4 text-white">Your Servers</h2>
 				{orgLoading ? (
@@ -183,6 +189,72 @@ export default function DashboardPage() {
 							</div>
 						))}
 					</Col>
+				)}
+			</div>
+
+			{/* Organization Servers Section */}
+			<div className="bg-neutral-800 rounded-lg shadow p-6">
+				<Row className='justify-between items-center mb-4'>
+					<h2 className='text-xl font-semibold text-white'>
+						Organization Servers
+						{organizationServers && (
+							<span className='ml-2 text-xs bg-neutral-600 text-white px-2 py-1 rounded-full'>
+								{organizationServers.length}
+							</span>
+						)}
+					</h2>
+				</Row>
+
+				{orgLoading ? (
+					<p className='text-neutral-400'>Loading user info...</p>
+				) : !userId ? (
+					<p className='text-neutral-400'>Please log in to see available servers</p>
+				) : !primaryOrganization ? (
+					<div className='text-center py-8'>
+						<p className='text-neutral-400 mb-2'>
+							You don&apos;t seem to be part of an organization yet
+						</p>
+						<p className='text-neutral-500 text-sm'>
+							Organization membership is required to see shared MCP servers
+						</p>
+					</div>
+				) : organizationServers === undefined ? (
+					<p className='text-neutral-400'>Loading servers...</p>
+				) : organizationServers.length === 0 ? (
+					<div className='text-center py-8'>
+						<p className='text-neutral-400 mb-2'>No servers shared in your organization yet</p>
+						<p className='text-neutral-500 text-sm'>
+							Encourage your team members to add their MCP servers!
+						</p>
+					</div>
+				) : (
+					<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+						{organizationServers.map((server) => {
+							const isOwnedByUser = server.userId === userId
+							return (
+								<div
+									key={server._id}
+									className={`p-4 border bg-neutral-700 rounded-lg hover:bg-neutral-650 transition-colors ${
+										isOwnedByUser 
+											? 'border-red-300 border-2 shadow-[0_0_0_2px_rgb(252_165_165)]' 
+											: 'border-neutral-600'
+									}`}
+								>
+									<Col className='gap-3'>
+										<div className='font-medium text-white'>{server.serverName}</div>
+
+										{server.description && (
+											<p className='text-sm text-neutral-300 line-clamp-2'>{server.description}</p>
+										)}
+
+										<Row className='justify-between items-center text-xs text-neutral-500'>
+											<span>Added: {new Date(server.createdAt).toLocaleDateString()}</span>
+										</Row>
+									</Col>
+								</div>
+							)
+						})}
+					</div>
 				)}
 			</div>
 

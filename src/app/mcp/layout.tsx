@@ -40,16 +40,10 @@ async function Sidebar() {
 			<nav>
 				<Col className='gap-1'>
 					<Link 
-						href="/dashboard/market" 
+						href="/mcp" 
 						className='px-3 py-2 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-md transition-colors'
 					>
-						MCP Marketplace
-					</Link>
-					<Link 
-						href="/dashboard" 
-						className='px-3 py-2 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-md transition-colors'
-					>
-						My MCPs
+						MCP Servers
 					</Link>
 				</Col>
 			</nav>

@@ -57,7 +57,7 @@ npx convex dev
 - `src/lib/convex-client.ts` - Server-side Convex client
 
 **Dashboard UI:**
-- `src/app/dashboard/page.tsx` - React interface for managing MCP servers
+- `src/app/mcp/page.tsx` - React interface for managing MCP servers
 - `src/app/providers.tsx` - Convex React provider setup
 
 ### Request Flow
