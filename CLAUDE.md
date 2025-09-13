@@ -6,3 +6,7 @@
 - prefer colocation + locality of behavior
 - NEVER user css margin (as margin is a css side effect)! Instead, wrap content in divs and apply padding, or use layout techniques such as flex box or css grid.
 - always type things as strictly as possible, use things like discriminated unions when reasonable
+- never use "any" to type something in typescript
+- don't overengineer things, build the simplest version possible
+- always style components for darkmode
+- always update env.ts when adding or updating env vars

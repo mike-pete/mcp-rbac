@@ -1,4 +1,3 @@
-import { env } from '@/env'
 import { McpTool, McpToolResult, UpstreamMcpClient } from './upstream-client'
 
 export type UpstreamConfig = {
@@ -10,22 +9,15 @@ export class GatewayManager {
 	private upstreamClients: Map<string, UpstreamMcpClient> = new Map()
 	private toolToClientMap: Map<string, UpstreamMcpClient> = new Map()
 	private initialized = false
+	private upstreamConfigs: UpstreamConfig[]
 
-	constructor() {
+	constructor(configs: UpstreamConfig[] = []) {
+		this.upstreamConfigs = configs
 		this.setupUpstreamClients()
 	}
 
 	private setupUpstreamClients(): void {
-		const upstreamConfigs: UpstreamConfig[] = []
-
-		if (env.CONTEXT7_MCP_URL) {
-			upstreamConfigs.push({
-				name: 'context7',
-				url: env.CONTEXT7_MCP_URL,
-			})
-		}
-
-		for (const config of upstreamConfigs) {
+		for (const config of this.upstreamConfigs) {
 			const client = new UpstreamMcpClient(config.name, config.url)
 			this.upstreamClients.set(config.name, client)
 		}

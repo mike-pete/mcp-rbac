@@ -7,7 +7,8 @@ import {
 } from '@modelcontextprotocol/sdk/types.js'
 import { WorkOS } from '@workos-inc/node'
 import { z } from 'zod'
-import { GatewayManager } from './gateway-manager'
+import { GatewayManager, UpstreamConfig } from './gateway-manager'
+import { convexClient, api } from '@/lib/convex-client'
 
 export interface McpServerContext {
 	userId?: string
@@ -21,27 +22,39 @@ const SERVER_INFO = {
 
 export class StreamingMcpServer {
 	private server: Server
-	private gatewayManager: GatewayManager
-	private initializationPromise: Promise<void>
 
 	constructor() {
 		this.server = new Server(SERVER_INFO, { capabilities: { tools: {} } })
-		this.gatewayManager = new GatewayManager()
-		this.initializationPromise = this.initializeGateway()
 		this.setupHandlers()
 	}
 
-	private async initializeGateway(): Promise<void> {
-		try {
-			await this.gatewayManager.initialize()
-			console.log('Gateway initialized successfully')
-		} catch (error) {
-			console.error('Failed to initialize gateway:', error)
+	private async getGatewayForUser(userId: string | undefined): Promise<GatewayManager> {
+		if (!userId) {
+			// Return empty gateway for unauthenticated users
+			return new GatewayManager([])
 		}
+
+		// Always fetch fresh servers and create new gateway
+		const configs = await this.fetchUserServers(userId)
+		const manager = new GatewayManager(configs)
+		
+		// Initialize the gateway
+		await manager.initialize()
+		
+		return manager
 	}
 
-	private async ensureInitialized(): Promise<void> {
-		await this.initializationPromise
+	private async fetchUserServers(userId: string): Promise<UpstreamConfig[]> {
+		try {
+			// Fetch user's servers from Convex
+			const userServers = await convexClient.query(api.mcpServers.getMcpServers, { userId })
+			
+			console.log(`Loaded ${userServers.length} MCP servers for user ${userId}`)
+			return userServers
+		} catch (error) {
+			console.error('Failed to fetch user servers:', error)
+			return []
+		}
 	}
 
 	private async createUserProfile(context: McpServerContext) {
@@ -68,8 +81,11 @@ export class StreamingMcpServer {
 			serverInfo: SERVER_INFO,
 		}))
 
-		this.server.setRequestHandler(ListToolsRequestSchema, async () => {
-			await this.ensureInitialized()
+		this.server.setRequestHandler(ListToolsRequestSchema, async (_, extra) => {
+			const context = extra?._meta as McpServerContext
+			console.log(`ListTools request for user: ${context?.userId}`)
+			
+			const gateway = await this.getGatewayForUser(context?.userId)
 			
 			const localTools = [
 				{
@@ -88,24 +104,27 @@ export class StreamingMcpServer {
 				},
 			]
 
-			const upstreamTools = await this.gatewayManager.getAllTools()
+			const upstreamTools = await gateway.getAllTools()
+			console.log(`Returning ${localTools.length} local tools and ${upstreamTools.length} upstream tools`)
+			
+			const allTools = [...localTools, ...upstreamTools]
+			console.log(`Tool names: ${allTools.map(t => t.name).join(', ')}`)
 			
 			return {
-				tools: [...localTools, ...upstreamTools],
+				tools: allTools,
 			}
 		})
 
 		this.server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
-			await this.ensureInitialized()
-			
 			const context = extra?._meta as McpServerContext
+			const gateway = await this.getGatewayForUser(context?.userId)
 			const { name, arguments: args } = request.params
 
 			const createTextContent = (text: string) => ({ content: [{ type: 'text' as const, text }] })
 
 			// Check if this is an upstream tool
-			if (this.gatewayManager.isUpstreamTool(name)) {
-				const result = await this.gatewayManager.callUpstreamTool(name, args)
+			if (gateway.isUpstreamTool(name)) {
+				const result = await gateway.callUpstreamTool(name, args)
 				if (result) {
 					return result
 				}
