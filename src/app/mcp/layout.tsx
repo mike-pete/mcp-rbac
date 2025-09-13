@@ -1,52 +1,43 @@
 import { signOut, withAuth } from '@workos-inc/authkit-nextjs'
-import Link from 'next/link'
 import UserAvatar from '../components/Avatar'
 import Col from '../components/Col'
 import Row from '../components/Row'
 
 export default async function ProtectedPage({ children }: { children: React.ReactNode }) {
 	return (
-		<div className='flex flex-row min-h-screen w-screen'>
-			<Sidebar />
+		<div className='min-h-screen w-screen'>
+			<Header />
 			{children}
 		</div>
 	)
 }
 
-async function Sidebar() {
+async function Header() {
 	const { user } = await withAuth({ ensureSignedIn: true })
-	const name = (user?.firstName ?? '') + (user?.lastName ?? '')
+	const name = [(user?.firstName ?? ''), (user?.lastName ?? '')].filter(Boolean).join(' ')
 
 	return (
-		<Col className='w-64 bg-neutral-950 h-screen border-neutral-800 border-r-2 sticky top-0 p-2.5 gap-4'>
-			<Row className='gap-2.5'>
-				<UserAvatar />
-				<Col className='gap-0.5 items-start'>
-					{name && <p className='text-base font-bold'>{name}</p>}
-					<form
-						className='contents'
-						action={async () => {
-							'use server'
-							await signOut()
-						}}
-					>
-						<button type='submit' className='text-red-300 text-sm'>
-							Sign out
-						</button>
-					</form>
-				</Col>
+		<header className='bg-neutral-950 border-neutral-800 border-b-2 sticky top-0 z-50 px-6 py-4'>
+			<Row className='justify-end items-center'>
+				{/* User info */}
+				<Row className='gap-3 items-center'>
+					<Col className='gap-0.5 items-end'>
+						{name && <p className='text-base font-bold text-white'>{name}</p>}
+						<form
+							className='contents'
+							action={async () => {
+								'use server'
+								await signOut()
+							}}
+						>
+							<button type='submit' className='text-red-300 text-sm hover:text-red-200 transition-colors'>
+								Sign out
+							</button>
+						</form>
+					</Col>
+					<UserAvatar />
+				</Row>
 			</Row>
-			
-			<nav>
-				<Col className='gap-1'>
-					<Link 
-						href="/mcp" 
-						className='px-3 py-2 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-md transition-colors'
-					>
-						MCP Servers
-					</Link>
-				</Col>
-			</nav>
-		</Col>
+		</header>
 	)
 }

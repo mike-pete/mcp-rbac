@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { useQuery, useMutation } from 'convex/react'
-import { api } from '../../../convex/_generated/api'
 import { useUserOrganizations } from '@/hooks/useUserOrganizations'
+import { useMutation, useQuery } from 'convex/react'
+import { useState } from 'react'
+import { api } from '../../../convex/_generated/api'
 import Col from '../components/Col'
 import Row from '../components/Row'
 
@@ -16,12 +16,6 @@ export default function DashboardPage() {
 
 	// Get user and organization info from WorkOS
 	const { userId, primaryOrganization, loading: orgLoading } = useUserOrganizations()
-
-	// Fetch user's servers
-	const servers = useQuery(
-		api.mcpServers.listMcpServers,
-		userId ? { userId } : 'skip'
-	)
 
 	// Fetch organization servers
 	const organizationServers = useQuery(
@@ -75,74 +69,75 @@ export default function DashboardPage() {
 	}
 
 	return (
-		<Col className="max-w-4xl mx-auto p-6 gap-6 bg-neutral-900 min-h-screen">
-			<div>
-				<h1 className="text-3xl font-bold mb-2 text-white">MCP Server Management</h1>
-				<p className="text-neutral-400">
-					Add and manage your Model Context Protocol servers
-				</p>
-			</div>
-
+		<Col className='p-6 gap-6 w-full flex-grow min-h-screen'>
 			{/* Add Server Form */}
-			<div className="bg-neutral-800 rounded-lg shadow p-6">
-				<h2 className="text-xl font-semibold mb-4 text-white">Add New Server</h2>
+			<div className='bg-neutral-800 rounded-lg shadow p-6'>
+				<h2 className='text-xl font-semibold mb-4 text-white'>Add New Server</h2>
 				{!orgLoading && !primaryOrganization && (
-					<div className="mb-4 p-3 bg-neutral-700 border border-neutral-600 rounded-md">
-						<p className="text-sm text-neutral-300">
-							You need to be part of a WorkOS organization to add servers. Contact your administrator to join an organization.
+					<div className='mb-4 p-3 bg-neutral-700 border border-neutral-600 rounded-md'>
+						<p className='text-sm text-neutral-300'>
+							You need to be part of a WorkOS organization to add servers. Contact your
+							administrator to join an organization.
 						</p>
 					</div>
 				)}
 				<form onSubmit={handleAddServer}>
-					<Col className="gap-4">
+					<Col className='gap-4'>
 						<div>
-							<label htmlFor="serverName" className="block text-sm font-medium mb-1 text-neutral-300">
+							<label
+								htmlFor='serverName'
+								className='block text-sm font-medium mb-1 text-neutral-300'
+							>
 								Server Name
 							</label>
 							<input
-								id="serverName"
-								type="text"
+								id='serverName'
+								type='text'
 								value={serverName}
 								onChange={(e) => setServerName(e.target.value)}
-								placeholder="e.g., my-context-server"
-								className="w-full px-3 py-2 border border-neutral-600 bg-neutral-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-red-300 placeholder-neutral-400"
+								placeholder='e.g., my-context-server'
+								className='w-full px-3 py-2 border border-neutral-600 bg-neutral-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-red-300 placeholder-neutral-400'
 								required
 							/>
 						</div>
 						<div>
-							<label htmlFor="serverUrl" className="block text-sm font-medium mb-1 text-neutral-300">
+							<label
+								htmlFor='serverUrl'
+								className='block text-sm font-medium mb-1 text-neutral-300'
+							>
 								Server URL
 							</label>
 							<input
-								id="serverUrl"
-								type="url"
+								id='serverUrl'
+								type='url'
 								value={serverUrl}
 								onChange={(e) => setServerUrl(e.target.value)}
-								placeholder="https://server.example.com/mcp"
-								className="w-full px-3 py-2 border border-neutral-600 bg-neutral-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-red-300 placeholder-neutral-400"
+								placeholder='https://server.example.com/mcp'
+								className='w-full px-3 py-2 border border-neutral-600 bg-neutral-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-red-300 placeholder-neutral-400'
 								required
 							/>
 						</div>
 						<div>
-							<label htmlFor="description" className="block text-sm font-medium mb-1 text-neutral-300">
+							<label
+								htmlFor='description'
+								className='block text-sm font-medium mb-1 text-neutral-300'
+							>
 								Description (optional)
 							</label>
 							<textarea
-								id="description"
+								id='description'
 								value={description}
 								onChange={(e) => setDescription(e.target.value)}
-								placeholder="Brief description of what this server provides..."
-								className="w-full px-3 py-2 border border-neutral-600 bg-neutral-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-red-300 placeholder-neutral-400 resize-none"
+								placeholder='Brief description of what this server provides...'
+								className='w-full px-3 py-2 border border-neutral-600 bg-neutral-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-red-300 placeholder-neutral-400 resize-none'
 								rows={2}
 							/>
 						</div>
-						{error && (
-							<div className="text-red-300 text-sm">{error}</div>
-						)}
+						{error && <div className='text-red-300 text-sm'>{error}</div>}
 						<button
-							type="submit"
+							type='submit'
 							disabled={isLoading || !userId || !primaryOrganization}
-							className="px-4 py-2 bg-white text-black rounded-md hover:bg-neutral-200 disabled:bg-neutral-600 disabled:text-neutral-400 disabled:cursor-not-allowed font-medium"
+							className='px-4 py-2 bg-white text-black rounded-md hover:bg-neutral-200 disabled:bg-neutral-600 disabled:text-neutral-400 disabled:cursor-not-allowed font-medium'
 						>
 							{isLoading ? 'Adding...' : 'Add Server'}
 						</button>
@@ -150,59 +145,10 @@ export default function DashboardPage() {
 				</form>
 			</div>
 
-			{/* My Server List */}
-			<div className="bg-neutral-800 rounded-lg shadow p-6">
-				<h2 className="text-xl font-semibold mb-4 text-white">Your Servers</h2>
-				{orgLoading ? (
-					<p className="text-neutral-400">Loading user info...</p>
-				) : !userId ? (
-					<p className="text-neutral-400">Please log in to see your servers</p>
-				) : servers === undefined ? (
-					<p className="text-neutral-400">Loading servers...</p>
-				) : servers.length === 0 ? (
-					<p className="text-neutral-400">No servers configured yet</p>
-				) : (
-					<Col className="gap-3">
-						{servers.map((server) => (
-							<div
-								key={server._id}
-								className="p-4 border border-neutral-600 bg-neutral-700 rounded-lg"
-							>
-								<Row className="justify-between items-start mb-2">
-									<Col className="gap-1 flex-1">
-										<div className="font-medium text-white">{server.serverName}</div>
-										{server.description && (
-											<div className="text-sm text-neutral-400">{server.description}</div>
-										)}
-										<div className="text-sm text-neutral-300">{server.serverUrl}</div>
-										<div className="text-xs text-neutral-500">
-											Added: {new Date(server.createdAt).toLocaleDateString()}
-										</div>
-									</Col>
-									<button
-										onClick={() => handleDeleteServer(server._id)}
-										className="px-3 py-1 text-red-300 hover:bg-red-900/30 rounded-md ml-4"
-									>
-										Delete
-									</button>
-								</Row>
-							</div>
-						))}
-					</Col>
-				)}
-			</div>
-
 			{/* Organization Servers Section */}
-			<div className="bg-neutral-800 rounded-lg shadow p-6">
+			<div className='bg-neutral-800 rounded-lg shadow p-6'>
 				<Row className='justify-between items-center mb-4'>
-					<h2 className='text-xl font-semibold text-white'>
-						Organization Servers
-						{organizationServers && (
-							<span className='ml-2 text-xs bg-neutral-600 text-white px-2 py-1 rounded-full'>
-								{organizationServers.length}
-							</span>
-						)}
-					</h2>
+					<h2 className='text-xl font-semibold text-white'>MCP Servers</h2>
 				</Row>
 
 				{orgLoading ? (
@@ -235,29 +181,40 @@ export default function DashboardPage() {
 								<div
 									key={server._id}
 									className={`p-4 border bg-neutral-700 rounded-lg hover:bg-neutral-650 transition-colors ${
-										isOwnedByUser 
-											? 'border-red-300 border-2 shadow-[0_0_0_2px_rgb(252_165_165)]' 
+										isOwnedByUser
+											? 'border-red-300 border-2 shadow-[0_0_0_2px_rgb(252_165_165)]'
 											: 'border-neutral-600'
 									}`}
 								>
-									<Col className='gap-3'>
-										<div className='font-medium text-white'>{server.serverName}</div>
+									<Row className='justify-between items-start mb-2'>
+										<Col className='gap-3 flex-1'>
+											<div className='font-medium text-white'>{server.serverName}</div>
 
-										{server.description && (
-											<p className='text-sm text-neutral-300 line-clamp-2'>{server.description}</p>
+											{server.description && (
+												<p className='text-sm text-neutral-300 line-clamp-2'>
+													{server.description}
+												</p>
+											)}
+
+											<Row className='justify-between items-center text-xs text-neutral-500'>
+												<span>Added: {new Date(server.createdAt).toLocaleDateString()}</span>
+											</Row>
+										</Col>
+										{isOwnedByUser && (
+											<button
+												onClick={() => handleDeleteServer(server._id)}
+												className='px-3 py-1 text-red-300 hover:bg-red-900/30 rounded-md ml-4'
+											>
+												Delete
+											</button>
 										)}
-
-										<Row className='justify-between items-center text-xs text-neutral-500'>
-											<span>Added: {new Date(server.createdAt).toLocaleDateString()}</span>
-										</Row>
-									</Col>
+									</Row>
 								</div>
 							)
 						})}
 					</div>
 				)}
 			</div>
-
 		</Col>
 	)
 }
