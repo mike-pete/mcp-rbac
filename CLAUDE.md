@@ -101,3 +101,5 @@ Use MCP Inspector to test the server locally:
 bun mcp:inspect
 ```
 This connects to `http://localhost:3000/api/mcp` as configured in `mcp-inspector.json`.
+- use tailwind neutral for darkmode colors
+- use red as a secondary color, but prefer lighter shades of red like red-300 so it looks more pink
