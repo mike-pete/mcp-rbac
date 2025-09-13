@@ -7,6 +7,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js'
 import { WorkOS } from '@workos-inc/node'
 import { z } from 'zod'
+import { GatewayManager } from './gateway-manager'
 
 export interface McpServerContext {
 	userId?: string
@@ -20,10 +21,27 @@ const SERVER_INFO = {
 
 export class StreamingMcpServer {
 	private server: Server
+	private gatewayManager: GatewayManager
+	private initializationPromise: Promise<void>
 
 	constructor() {
 		this.server = new Server(SERVER_INFO, { capabilities: { tools: {} } })
+		this.gatewayManager = new GatewayManager()
+		this.initializationPromise = this.initializeGateway()
 		this.setupHandlers()
+	}
+
+	private async initializeGateway(): Promise<void> {
+		try {
+			await this.gatewayManager.initialize()
+			console.log('Gateway initialized successfully')
+		} catch (error) {
+			console.error('Failed to initialize gateway:', error)
+		}
+	}
+
+	private async ensureInitialized(): Promise<void> {
+		await this.initializationPromise
 	}
 
 	private async createUserProfile(context: McpServerContext) {
@@ -50,8 +68,10 @@ export class StreamingMcpServer {
 			serverInfo: SERVER_INFO,
 		}))
 
-		this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
-			tools: [
+		this.server.setRequestHandler(ListToolsRequestSchema, async () => {
+			await this.ensureInitialized()
+			
+			const localTools = [
 				{
 					name: 'echo',
 					description: 'Echo back a message with user context',
@@ -66,15 +86,33 @@ export class StreamingMcpServer {
 					description: 'Get authenticated user information',
 					inputSchema: { type: 'object', properties: {} },
 				},
-			],
-		}))
+			]
+
+			const upstreamTools = await this.gatewayManager.getAllTools()
+			
+			return {
+				tools: [...localTools, ...upstreamTools],
+			}
+		})
 
 		this.server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
+			await this.ensureInitialized()
+			
 			const context = extra?._meta as McpServerContext
 			const { name, arguments: args } = request.params
 
 			const createTextContent = (text: string) => ({ content: [{ type: 'text' as const, text }] })
 
+			// Check if this is an upstream tool
+			if (this.gatewayManager.isUpstreamTool(name)) {
+				const result = await this.gatewayManager.callUpstreamTool(name, args)
+				if (result) {
+					return result
+				}
+				throw new Error(`Failed to call upstream tool: ${name}`)
+			}
+
+			// Handle local tools
 			switch (name) {
 				case 'echo':
 					const { message } = z.object({ message: z.string() }).parse(args)

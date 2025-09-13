@@ -1,6 +1,6 @@
-- we are building an http streaming mcp server NOT SSE!
+- we are building an MCP gateway, users connect to our mcp server with streamable http, and we act as an mcp client - connecting to other http and sse mcp servers
 - when using env vars, always access them via the env.ts file ( import { env } from '@/env'
- )
+  )
 - in typescript prefer type over interface when possible
 - in typescript, avoid "any" like the plague
 - prefer colocation + locality of behavior
