@@ -8,6 +8,7 @@ import Col from '../components/Col'
 import Row from '../components/Row'
 import { Switch } from '@base-ui-components/react/switch'
 import { Dialog } from '@base-ui-components/react/dialog'
+import { Tooltip } from '@base-ui-components/react/tooltip'
 import { IconTrash, IconRefresh, IconTool, IconSettings } from '@tabler/icons-react'
 
 export default function DashboardPage() {
@@ -200,18 +201,19 @@ export default function DashboardPage() {
 						</p>
 					</div>
 				) : (
-					<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-						{organizationServers.map((server) => {
-							const isOwnedByUser = server.userId === userId
-							return (
-								<div
-									key={server._id}
-									className={`p-4 border bg-neutral-700 rounded-lg hover:bg-neutral-650 transition-colors ${
-										isOwnedByUser
-											? 'border-red-300 border-2 shadow-[0_0_0_2px_rgb(252_165_165)]'
-											: 'border-neutral-600'
-									}`}
-								>
+					<Tooltip.Provider>
+						<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+							{organizationServers.map((server) => {
+								const isOwnedByUser = server.userId === userId
+								return (
+									<div
+										key={server._id}
+										className={`p-4 border bg-neutral-700 rounded-lg hover:bg-neutral-650 transition-colors ${
+											isOwnedByUser
+												? 'border-red-300 border-2 shadow-[0_0_0_2px_rgb(252_165_165)]'
+												: 'border-neutral-600'
+										}`}
+									>
 									<Col className='gap-3'>
 										<Row className='justify-between items-center'>
 											<div className='font-medium text-white'>{server.serverName}</div>
@@ -225,13 +227,42 @@ export default function DashboardPage() {
 														<IconSettings size={16} />
 													</button>
 												)}
-												<Switch.Root
-													checked={server.enabled}
-													onCheckedChange={(checked) => handleToggleServer(server._id, checked)}
-													className="relative flex h-5 w-9 cursor-pointer rounded-full bg-neutral-900 p-px shadow-[inset_0_1.5px_2px] shadow-white/20 outline-1 -outline-offset-1 outline-white/30 transition-[background-color,box-shadow] duration-200 ease-out before:absolute before:rounded-full before:outline-offset-2 before:outline-red-300 focus-visible:before:inset-0 focus-visible:before:outline-2 active:bg-neutral-800 data-[checked]:bg-red-400 data-[checked]:shadow-white/30 data-[checked]:outline-white/40 data-[checked]:active:bg-red-300"
-												>
-													<Switch.Thumb className="aspect-square h-full rounded-full bg-white shadow-[0_0_1px_1px,0_1px_1px,1px_2px_4px_-1px] shadow-white/20 transition-transform duration-200 data-[checked]:translate-x-4 data-[checked]:shadow-white/30" />
-												</Switch.Root>
+												<Tooltip.Root>
+													<Tooltip.Trigger 
+														onClick={() => handleToggleServer(server._id, !server.enabled)}
+														className="inline-flex items-center"
+													>
+														<Switch.Root
+															checked={server.enabled}
+															className="relative flex h-5 w-9 cursor-pointer rounded-full bg-neutral-900 p-px shadow-[inset_0_1.5px_2px] shadow-white/20 outline-1 -outline-offset-1 outline-white/30 transition-[background-color,box-shadow] duration-200 ease-out before:absolute before:rounded-full before:outline-offset-2 before:outline-red-300 focus-visible:before:inset-0 focus-visible:before:outline-2 active:bg-neutral-800 data-[checked]:bg-red-400 data-[checked]:shadow-white/30 data-[checked]:outline-white/40 data-[checked]:active:bg-red-300"
+														>
+															<Switch.Thumb className="aspect-square h-full rounded-full bg-white shadow-[0_0_1px_1px,0_1px_1px,1px_2px_4px_-1px] shadow-white/20 transition-transform duration-200 data-[checked]:translate-x-4 data-[checked]:shadow-white/30" />
+														</Switch.Root>
+													</Tooltip.Trigger>
+													<Tooltip.Portal>
+														<Tooltip.Positioner sideOffset={10}>
+															<Tooltip.Popup className="flex origin-[var(--transform-origin)] flex-col rounded-md bg-neutral-900 px-2 py-1 text-sm text-white shadow-lg shadow-black/50 outline-1 outline-neutral-600 transition-[transform,scale,opacity] data-[ending-style]:scale-90 data-[ending-style]:opacity-0 data-[instant]:duration-0 data-[starting-style]:scale-90 data-[starting-style]:opacity-0 z-50">
+																<Tooltip.Arrow className="data-[side=bottom]:top-[-8px] data-[side=left]:right-[-13px] data-[side=left]:rotate-90 data-[side=right]:left-[-13px] data-[side=right]:-rotate-90 data-[side=top]:bottom-[-8px] data-[side=top]:rotate-180">
+																	<svg width="20" height="10" viewBox="0 0 20 10" fill="none">
+																		<path
+																			d="M9.66437 2.60207L4.80758 6.97318C4.07308 7.63423 3.11989 8 2.13172 8H0V10H20V8H18.5349C17.5468 8 16.5936 7.63423 15.8591 6.97318L11.0023 2.60207C10.622 2.2598 10.0447 2.25979 9.66437 2.60207Z"
+																			className="fill-neutral-900"
+																		/>
+																		<path
+																			d="M8.99542 1.85876C9.75604 1.17425 10.9106 1.17422 11.6713 1.85878L16.5281 6.22989C17.0789 6.72568 17.7938 7.00001 18.5349 7.00001L15.89 7L11.0023 2.60207C10.622 2.2598 10.0447 2.2598 9.66436 2.60207L4.77734 7L2.13171 7.00001C2.87284 7.00001 3.58774 6.72568 4.13861 6.22989L8.99542 1.85876Z"
+																			className="fill-neutral-600"
+																		/>
+																		<path
+																			d="M10.3333 3.34539L5.47654 7.71648C4.55842 8.54279 3.36693 9 2.13172 9H0V8H2.13172C3.11989 8 4.07308 7.63423 4.80758 6.97318L9.66437 2.60207C10.0447 2.25979 10.622 2.2598 11.0023 2.60207L15.8591 6.97318C16.5936 7.63423 17.5468 8 18.5349 8H20V9H18.5349C17.2998 9 16.1083 8.54278 15.1901 7.71648L10.3333 3.34539Z"
+																			className="fill-neutral-600"
+																		/>
+																	</svg>
+																</Tooltip.Arrow>
+																{server.enabled ? 'Disable this MCP for your account' : 'Enable this MCP for your account'}
+															</Tooltip.Popup>
+														</Tooltip.Positioner>
+													</Tooltip.Portal>
+												</Tooltip.Root>
 											</Row>
 										</Row>
 
@@ -268,9 +299,10 @@ export default function DashboardPage() {
 										)}
 									</Col>
 								</div>
-							)
-						})}
-					</div>
+								)
+							})}
+						</div>
+					</Tooltip.Provider>
 				)}
 			</div>
 
@@ -426,15 +458,42 @@ export default function DashboardPage() {
 																	)}
 																</Col>
 																{selectedServer.userId === userId && (
-																	<Switch.Root
-																		checked={tool.enabled}
-																		onCheckedChange={(checked) => {
-																			handleToggleToolEnabled(selectedServer._id, tool.name, checked)
-																		}}
-																		className="relative flex h-4 w-7 cursor-pointer rounded-full bg-neutral-900 p-px shadow-[inset_0_1.5px_2px] shadow-white/20 outline-1 -outline-offset-1 outline-white/30 transition-[background-color,box-shadow] duration-200 ease-out before:absolute before:rounded-full before:outline-offset-2 before:outline-red-300 focus-visible:before:inset-0 focus-visible:before:outline-2 active:bg-neutral-800 data-[checked]:bg-red-400 data-[checked]:shadow-white/30 data-[checked]:outline-white/40 data-[checked]:active:bg-red-300"
-																	>
-																		<Switch.Thumb className="aspect-square h-full rounded-full bg-white shadow-[0_0_1px_1px,0_1px_1px,1px_2px_4px_-1px] shadow-white/20 transition-transform duration-200 data-[checked]:translate-x-3 data-[checked]:shadow-white/30" />
-																	</Switch.Root>
+																	<Tooltip.Root>
+																		<Tooltip.Trigger 
+																			onClick={() => handleToggleToolEnabled(selectedServer._id, tool.name, !tool.enabled)}
+																			className="inline-flex items-center"
+																		>
+																			<Switch.Root
+																				checked={tool.enabled}
+																				className="relative flex h-4 w-7 cursor-pointer rounded-full bg-neutral-900 p-px shadow-[inset_0_1.5px_2px] shadow-white/20 outline-1 -outline-offset-1 outline-white/30 transition-[background-color,box-shadow] duration-200 ease-out before:absolute before:rounded-full before:outline-offset-2 before:outline-red-300 focus-visible:before:inset-0 focus-visible:before:outline-2 active:bg-neutral-800 data-[checked]:bg-red-400 data-[checked]:shadow-white/30 data-[checked]:outline-white/40 data-[checked]:active:bg-red-300"
+																			>
+																				<Switch.Thumb className="aspect-square h-full rounded-full bg-white shadow-[0_0_1px_1px,0_1px_1px,1px_2px_4px_-1px] shadow-white/20 transition-transform duration-200 data-[checked]:translate-x-3 data-[checked]:shadow-white/30" />
+																			</Switch.Root>
+																		</Tooltip.Trigger>
+																		<Tooltip.Portal>
+																			<Tooltip.Positioner sideOffset={10}>
+																				<Tooltip.Popup className="flex origin-[var(--transform-origin)] flex-col rounded-md bg-neutral-900 px-2 py-1 text-sm text-white shadow-lg shadow-black/50 outline-1 outline-neutral-600 transition-[transform,scale,opacity] data-[ending-style]:scale-90 data-[ending-style]:opacity-0 data-[instant]:duration-0 data-[starting-style]:scale-90 data-[starting-style]:opacity-0 z-50">
+																					<Tooltip.Arrow className="data-[side=bottom]:top-[-8px] data-[side=left]:right-[-13px] data-[side=left]:rotate-90 data-[side=right]:left-[-13px] data-[side=right]:-rotate-90 data-[side=top]:bottom-[-8px] data-[side=top]:rotate-180">
+																						<svg width="20" height="10" viewBox="0 0 20 10" fill="none">
+																							<path
+																								d="M9.66437 2.60207L4.80758 6.97318C4.07308 7.63423 3.11989 8 2.13172 8H0V10H20V8H18.5349C17.5468 8 16.5936 7.63423 15.8591 6.97318L11.0023 2.60207C10.622 2.2598 10.0447 2.25979 9.66437 2.60207Z"
+																								className="fill-neutral-900"
+																							/>
+																							<path
+																								d="M8.99542 1.85876C9.75604 1.17425 10.9106 1.17422 11.6713 1.85878L16.5281 6.22989C17.0789 6.72568 17.7938 7.00001 18.5349 7.00001L15.89 7L11.0023 2.60207C10.622 2.2598 10.0447 2.2598 9.66436 2.60207L4.77734 7L2.13171 7.00001C2.87284 7.00001 3.58774 6.72568 4.13861 6.22989L8.99542 1.85876Z"
+																								className="fill-neutral-600"
+																							/>
+																							<path
+																								d="M10.3333 3.34539L5.47654 7.71648C4.55842 8.54279 3.36693 9 2.13172 9H0V8H2.13172C3.11989 8 4.07308 7.63423 4.80758 6.97318L9.66437 2.60207C10.0447 2.25979 10.622 2.2598 11.0023 2.60207L15.8591 6.97318C16.5936 7.63423 17.5468 8 18.5349 8H20V9H18.5349C17.2998 9 16.1083 8.54278 15.1901 7.71648L10.3333 3.34539Z"
+																								className="fill-neutral-600"
+																							/>
+																						</svg>
+																					</Tooltip.Arrow>
+																					{tool.enabled ? 'Disable this tool for everyone' : 'Enable this tool for everyone'}
+																				</Tooltip.Popup>
+																			</Tooltip.Positioner>
+																		</Tooltip.Portal>
+																	</Tooltip.Root>
 																)}
 															</Row>
 														</div>
