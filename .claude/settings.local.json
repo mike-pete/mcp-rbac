@@ -11,7 +11,15 @@
       "mcp__playwright__browser_snapshot",
       "mcp__context7__resolve-library-id",
       "mcp__context7__get-library-docs",
-      "WebFetch(domain:spec.modelcontextprotocol.io)"
+      "WebFetch(domain:spec.modelcontextprotocol.io)",
+      "mcp__convex__status",
+      "mcp__convex__tables",
+      "Bash(npx convex dev:*)",
+      "mcp__workos__workos_search",
+      "mcp__workos__workos_docs",
+      "Bash(npm run lint)",
+      "Bash(npx tsc:*)",
+      "Bash(bun add:*)"
     ],
     "deny": []
   }

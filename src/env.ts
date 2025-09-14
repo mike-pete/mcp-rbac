@@ -11,6 +11,7 @@ export const env = createEnv({
 		WORKOS_API_KEY: z.string().startsWith('sk_test_'),
 		WORKOS_COOKIE_PASSWORD: z.string(),
 		WORKOS_AUTHKIT_DOMAIN: z.url(),
+		CONTEXT7_MCP_URL: z.string().url().optional(),
 	},
 	/*
 	 * Environment variables available on the client (and server).
@@ -19,6 +20,8 @@ export const env = createEnv({
 	 */
 	client: {
 		NEXT_PUBLIC_WORKOS_REDIRECT_URI: z.url(),
+		NEXT_PUBLIC_CONVEX_URL: z.string().url(),
+		NEXT_PUBLIC_APP_URL: z.string().url(),
 	},
 	runtimeEnv: {
 		WORKOS_CLIENT_ID: process.env.WORKOS_CLIENT_ID,
@@ -26,5 +29,8 @@ export const env = createEnv({
 		WORKOS_COOKIE_PASSWORD: process.env.WORKOS_COOKIE_PASSWORD,
 		WORKOS_AUTHKIT_DOMAIN: process.env.WORKOS_AUTHKIT_DOMAIN,
 		NEXT_PUBLIC_WORKOS_REDIRECT_URI: process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI,
+		NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
+		NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+		CONTEXT7_MCP_URL: process.env.CONTEXT7_MCP_URL,
 	},
 })
