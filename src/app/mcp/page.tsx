@@ -6,18 +6,9 @@ import { useState } from 'react'
 import { api } from '../../../convex/_generated/api'
 import Col from '../components/Col'
 import Row from '../components/Row'
-import { Collapsible } from '@base-ui-components/react/collapsible'
 import { Switch } from '@base-ui-components/react/switch'
 import { Dialog } from '@base-ui-components/react/dialog'
 import { IconTrash, IconRefresh, IconTool, IconSettings } from '@tabler/icons-react'
-
-function ChevronIcon(props: React.ComponentProps<'svg'>) {
-	return (
-		<svg width="16" height="16" viewBox="0 0 16 16" fill="none" {...props}>
-			<path d="M6 12L10 8L6 4" stroke="currentcolor" strokeWidth="2" />
-		</svg>
-	)
-}
 
 export default function DashboardPage() {
 	const [serverName, setServerName] = useState('')
@@ -37,6 +28,7 @@ export default function DashboardPage() {
 		createdAt: number
 		lastToolsUpdate?: number
 	} | null>(null)
+	const [showAddServerDialog, setShowAddServerDialog] = useState(false)
 
 	// Get user and organization info from WorkOS
 	const { userId, primaryOrganization, loading: orgLoading } = useUserOrganizations()
@@ -92,6 +84,7 @@ export default function DashboardPage() {
 			setServerName('')
 			setServerUrl('')
 			setDescription('')
+			setShowAddServerDialog(false)
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Failed to add server')
 		} finally {
@@ -144,88 +137,15 @@ export default function DashboardPage() {
 
 	return (
 		<Col className='p-6 gap-6 w-full flex-grow min-h-screen'>
-			{/* Add Server Form */}
-			<div className='bg-neutral-800 rounded-lg shadow p-6'>
-				<Collapsible.Root className="w-full">
-					<Collapsible.Trigger className="group flex items-center gap-3 w-full text-left focus:outline-none rounded-md p-2 -m-2 cursor-pointer">
-						<ChevronIcon className="size-4 text-neutral-400 transition-all ease-out group-data-[panel-open]:rotate-90" />
-						<h2 className='text-xl font-semibold text-white'>Add New Server</h2>
-					</Collapsible.Trigger>
-					<Collapsible.Panel className="flex h-[var(--collapsible-panel-height)] flex-col justify-end overflow-hidden transition-all ease-out data-[ending-style]:h-0 data-[starting-style]:h-0">
-						<div className="mt-4">
-							{!orgLoading && !primaryOrganization && (
-								<div className='mb-4 p-3 bg-neutral-700 border border-neutral-600 rounded-md'>
-									<p className='text-sm text-neutral-300'>
-										You need to be part of a WorkOS organization to add servers. Contact your
-										administrator to join an organization.
-									</p>
-								</div>
-							)}
-							<form onSubmit={handleAddServer}>
-								<Col className='gap-4'>
-									<div>
-										<label
-											htmlFor='serverName'
-											className='block text-sm font-medium mb-1 text-neutral-300'
-										>
-											Server Name
-										</label>
-										<input
-											id='serverName'
-											type='text'
-											value={serverName}
-											onChange={(e) => setServerName(e.target.value)}
-											placeholder='e.g., my-context-server'
-											className='w-full px-3 py-2 border border-neutral-600 bg-neutral-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-red-300 placeholder-neutral-400'
-											required
-										/>
-									</div>
-									<div>
-										<label
-											htmlFor='serverUrl'
-											className='block text-sm font-medium mb-1 text-neutral-300'
-										>
-											Server URL
-										</label>
-										<input
-											id='serverUrl'
-											type='url'
-											value={serverUrl}
-											onChange={(e) => setServerUrl(e.target.value)}
-											placeholder='https://server.example.com/mcp'
-											className='w-full px-3 py-2 border border-neutral-600 bg-neutral-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-red-300 placeholder-neutral-400'
-											required
-										/>
-									</div>
-									<div>
-										<label
-											htmlFor='description'
-											className='block text-sm font-medium mb-1 text-neutral-300'
-										>
-											Description (optional)
-										</label>
-										<textarea
-											id='description'
-											value={description}
-											onChange={(e) => setDescription(e.target.value)}
-											placeholder='Brief description of what this server provides...'
-											className='w-full px-3 py-2 border border-neutral-600 bg-neutral-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-red-300 placeholder-neutral-400 resize-none'
-											rows={2}
-										/>
-									</div>
-									{error && <div className='text-red-300 text-sm'>{error}</div>}
-									<button
-										type='submit'
-										disabled={isLoading || !userId || !primaryOrganization}
-										className='px-4 py-2 bg-white text-black rounded-md hover:bg-neutral-200 disabled:bg-neutral-600 disabled:text-neutral-400 disabled:cursor-not-allowed font-medium'
-									>
-										{isLoading ? 'Adding...' : 'Add Server'}
-									</button>
-								</Col>
-							</form>
-						</div>
-					</Collapsible.Panel>
-				</Collapsible.Root>
+			{/* Add Server Button */}
+			<div className='flex justify-end'>
+				<button
+					onClick={() => setShowAddServerDialog(true)}
+					disabled={!userId || !primaryOrganization}
+					className='px-4 py-2 bg-white text-black rounded-md hover:bg-neutral-200 disabled:bg-neutral-600 disabled:text-neutral-400 disabled:cursor-not-allowed font-medium'
+				>
+					Add New Server
+				</button>
 			</div>
 
 			{/* Organization Servers Section */}
@@ -323,6 +243,96 @@ export default function DashboardPage() {
 					</div>
 				)}
 			</div>
+
+			{/* Add Server Dialog */}
+			<Dialog.Root open={showAddServerDialog} onOpenChange={setShowAddServerDialog}>
+				<Dialog.Portal>
+					<Dialog.Backdrop className="fixed inset-0 bg-black opacity-70 transition-all duration-150 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0" />
+					<Dialog.Popup className="fixed top-1/2 left-1/2 -mt-8 w-[500px] max-w-[calc(100vw-3rem)] -translate-x-1/2 -translate-y-1/2 rounded-lg bg-neutral-800 p-6 text-white outline-1 outline-neutral-600 transition-all duration-150 data-[ending-style]:scale-90 data-[ending-style]:opacity-0 data-[starting-style]:scale-90 data-[starting-style]:opacity-0">
+						<Dialog.Title className="-mt-1.5 mb-4 text-xl font-semibold">
+							Add New Server
+						</Dialog.Title>
+
+						{!orgLoading && !primaryOrganization && (
+							<div className='mb-4 p-3 bg-neutral-700 border border-neutral-600 rounded-md'>
+								<p className='text-sm text-neutral-300'>
+									You need to be part of a WorkOS organization to add servers. Contact your
+									administrator to join an organization.
+								</p>
+							</div>
+						)}
+
+						<form onSubmit={handleAddServer}>
+							<Col className='gap-4'>
+								<div>
+									<label
+										htmlFor='serverName'
+										className='block text-sm font-medium mb-1 text-neutral-300'
+									>
+										Server Name
+									</label>
+									<input
+										id='serverName'
+										type='text'
+										value={serverName}
+										onChange={(e) => setServerName(e.target.value)}
+										placeholder='e.g., my-context-server'
+										className='w-full px-3 py-2 border border-neutral-600 bg-neutral-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-red-300 placeholder-neutral-400'
+										required
+									/>
+								</div>
+								<div>
+									<label
+										htmlFor='serverUrl'
+										className='block text-sm font-medium mb-1 text-neutral-300'
+									>
+										Server URL
+									</label>
+									<input
+										id='serverUrl'
+										type='url'
+										value={serverUrl}
+										onChange={(e) => setServerUrl(e.target.value)}
+										placeholder='https://server.example.com/mcp'
+										className='w-full px-3 py-2 border border-neutral-600 bg-neutral-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-red-300 placeholder-neutral-400'
+										required
+									/>
+								</div>
+								<div>
+									<label
+										htmlFor='description'
+										className='block text-sm font-medium mb-1 text-neutral-300'
+									>
+										Description (optional)
+									</label>
+									<textarea
+										id='description'
+										value={description}
+										onChange={(e) => setDescription(e.target.value)}
+										placeholder='Brief description of what this server provides...'
+										className='w-full px-3 py-2 border border-neutral-600 bg-neutral-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-red-300 placeholder-neutral-400 resize-none'
+										rows={2}
+									/>
+								</div>
+								{error && <div className='text-red-300 text-sm'>{error}</div>}
+								
+								<Row className="justify-end gap-3 pt-2">
+									<Dialog.Close className="px-4 py-2 bg-neutral-700 text-white rounded-md hover:bg-neutral-600 font-medium">
+										Cancel
+									</Dialog.Close>
+									<button
+										type='submit'
+										disabled={isLoading || !userId || !primaryOrganization}
+										className='px-4 py-2 bg-white text-black rounded-md hover:bg-neutral-200 disabled:bg-neutral-600 disabled:text-neutral-400 disabled:cursor-not-allowed font-medium'
+									>
+										{isLoading ? 'Adding...' : 'Add Server'}
+									</button>
+								</Row>
+							</Col>
+						</form>
+					</Dialog.Popup>
+				</Dialog.Portal>
+			</Dialog.Root>
 
 			{/* Settings Dialog */}
 			<Dialog.Root open={!!selectedServer} onOpenChange={(open) => !open && setSelectedServer(null)}>
