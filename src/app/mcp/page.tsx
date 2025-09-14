@@ -9,9 +9,11 @@ import Row from '../components/Row'
 import { Switch } from '@base-ui-components/react/switch'
 import { Dialog } from '@base-ui-components/react/dialog'
 import { Tooltip } from '@base-ui-components/react/tooltip'
-import { IconTrash, IconRefresh, IconTool, IconSettings } from '@tabler/icons-react'
+import { IconTrash, IconRefresh, IconTool, IconSettings, IconCopy } from '@tabler/icons-react'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
+import Editor from '@monaco-editor/react'
+import { env } from '@/env'
 
 dayjs.extend(relativeTime)
 
@@ -34,6 +36,8 @@ export default function DashboardPage() {
 		lastToolsUpdate?: number
 	} | null>(null)
 	const [showAddServerDialog, setShowAddServerDialog] = useState(false)
+	const [showConnectDialog, setShowConnectDialog] = useState(false)
+	const [copySuccess, setCopySuccess] = useState(false)
 
 	// Get user and organization info from WorkOS
 	const { userId, primaryOrganization, loading: orgLoading } = useUserOrganizations()
@@ -163,6 +167,26 @@ export default function DashboardPage() {
 		}
 	}
 
+	const handleCopyConfig = async () => {
+		if (!primaryOrganization) return
+		
+		const config = {
+			mcpServers: {
+				[`${primaryOrganization.name} MCP`]: {
+					url: `${env.NEXT_PUBLIC_APP_URL}/api/mcp`
+				}
+			}
+		}
+		
+		try {
+			await navigator.clipboard.writeText(JSON.stringify(config, null, 2))
+			setCopySuccess(true)
+			setTimeout(() => setCopySuccess(false), 2000)
+		} catch (err) {
+			console.error('Failed to copy config:', err)
+		}
+	}
+
 	return (
 		<Col className='p-6 gap-6 w-full flex-grow min-h-screen'>
 			{/* Page Header */}
@@ -170,13 +194,22 @@ export default function DashboardPage() {
 				<h1 className='text-2xl font-bold text-white'>
 					{primaryOrganization ? `${primaryOrganization.name} - MCP Servers` : 'MCP Servers'}
 				</h1>
-				<button
-					onClick={() => setShowAddServerDialog(true)}
-					disabled={!userId || !primaryOrganization}
-					className='px-4 py-2 bg-white text-black rounded-md hover:bg-neutral-200 disabled:bg-neutral-600 disabled:text-neutral-400 disabled:cursor-not-allowed font-medium'
-				>
-					Add MCP
-				</button>
+				<Row className='gap-3'>
+					<button
+						onClick={() => setShowConnectDialog(true)}
+						disabled={!userId || !primaryOrganization}
+						className='px-4 py-2 bg-neutral-700 text-white rounded-md hover:bg-neutral-600 disabled:bg-neutral-600 disabled:text-neutral-400 disabled:cursor-not-allowed font-medium border border-neutral-600'
+					>
+						Connect
+					</button>
+					<button
+						onClick={() => setShowAddServerDialog(true)}
+						disabled={!userId || !primaryOrganization}
+						className='px-4 py-2 bg-white text-black rounded-md hover:bg-neutral-200 disabled:bg-neutral-600 disabled:text-neutral-400 disabled:cursor-not-allowed font-medium'
+					>
+						Add MCP
+					</button>
+				</Row>
 			</div>
 
 			{/* Organization Servers Section */}
@@ -540,6 +573,98 @@ export default function DashboardPage() {
 								</Col>
 							</>
 						)}
+					</Dialog.Popup>
+				</Dialog.Portal>
+			</Dialog.Root>
+
+			{/* Connect Dialog */}
+			<Dialog.Root open={showConnectDialog} onOpenChange={setShowConnectDialog}>
+				<Dialog.Portal>
+					<Dialog.Backdrop className="fixed inset-0 bg-black opacity-70 transition-all duration-150 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0" />
+					<Dialog.Popup className="fixed top-1/2 left-1/2 -mt-8 w-[600px] max-w-[calc(100vw-3rem)] max-h-[calc(100vh-6rem)] -translate-x-1/2 -translate-y-1/2 rounded-lg bg-neutral-800 p-6 text-white outline-1 outline-neutral-600 transition-all duration-150 data-[ending-style]:scale-90 data-[ending-style]:opacity-0 data-[starting-style]:scale-90 data-[starting-style]:opacity-0 overflow-y-auto">
+						<Dialog.Title className="-mt-1.5 mb-4 text-xl font-semibold">
+							Connect to {primaryOrganization?.name} MCP
+						</Dialog.Title>
+						
+						<Col className="gap-6">
+							<div>
+								<p className="text-neutral-300 mb-4">
+									To connect to your organization&apos;s MCP servers from Cursor, add this configuration to your MCP settings:
+								</p>
+								
+								<div className="space-y-2">
+									<h3 className="text-sm font-medium text-neutral-400">Cursor</h3>
+									<p className="text-sm text-neutral-500">
+										Go to Cursor Settings → Features → Model Context Protocol → Edit config
+									</p>
+								</div>
+								
+							</div>
+
+							{primaryOrganization && (
+								<div>
+									<Row className="justify-between items-center mb-2">
+										<h3 className="text-sm font-medium text-neutral-400">Configuration JSON</h3>
+										<button
+											onClick={handleCopyConfig}
+											className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-2 transition-colors ${
+												copySuccess 
+													? 'bg-green-900/30 text-green-400 border border-green-600' 
+													: 'bg-neutral-700 text-white hover:bg-neutral-600 border border-neutral-600'
+											}`}
+										>
+											<IconCopy size={16} />
+											{copySuccess ? 'Copied!' : 'Copy Config'}
+										</button>
+									</Row>
+									
+									<div className="border border-neutral-600 rounded-lg overflow-hidden">
+										<Editor
+											height="175px"
+											defaultLanguage="json"
+											value={JSON.stringify({
+												mcpServers: {
+													[`${primaryOrganization.name} MCP`]: {
+														url: `${env.NEXT_PUBLIC_APP_URL}/api/mcp`
+													}
+												}
+											}, null, 2)}
+											theme="vs-dark"
+											options={{
+												readOnly: true,
+												minimap: { enabled: false },
+												scrollBeyondLastLine: false,
+												fontSize: 14,
+												lineNumbers: 'off',
+												glyphMargin: false,
+												folding: false,
+												lineDecorationsWidth: 0,
+												lineNumbersMinChars: 0,
+												renderLineHighlight: 'none',
+												padding: { top: 16, bottom: 16 },
+												overviewRulerLanes: 0,
+												hideCursorInOverviewRuler: true,
+												overviewRulerBorder: false,
+												scrollbar: {
+													vertical: 'hidden',
+													horizontal: 'hidden'
+												},
+												wordWrap: 'off',
+												automaticLayout: true
+											}}
+										/>
+									</div>
+								</div>
+							)}
+
+							<div className="border-t border-neutral-700 pt-4">
+								<Row className="justify-end">
+									<Dialog.Close className="px-4 py-2 bg-neutral-700 text-white rounded-md hover:bg-neutral-600 font-medium text-sm">
+										Close
+									</Dialog.Close>
+								</Row>
+							</div>
+						</Col>
 					</Dialog.Popup>
 				</Dialog.Portal>
 			</Dialog.Root>

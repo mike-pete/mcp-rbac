@@ -12,6 +12,7 @@
   "dependencies": {
     "@base-ui-components/react": "^1.0.0-beta.3",
     "@modelcontextprotocol/sdk": "^1.17.4",
+    "@monaco-editor/react": "^4.7.0",
     "@t3-oss/env-nextjs": "^0.13.8",
     "@tabler/icons-react": "^3.34.1",
     "@workos-inc/authkit-nextjs": "^2.5.0",
