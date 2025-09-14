@@ -442,10 +442,10 @@ export default function DashboardPage() {
 											)}
 										</Row>
 										{selectedServer.tools && selectedServer.tools.length > 0 ? (
-											<div className="bg-neutral-900 rounded-md p-4 max-h-64 overflow-y-auto">
-												<div className="space-y-3">
+											<div className="border border-neutral-600 rounded-lg p-4 max-h-64 overflow-y-auto">
+												<div className="flex flex-col gap-3">
 													{selectedServer.tools.map((tool, index) => (
-														<div key={index} className="border-b border-neutral-700 pb-3 last:border-0">
+														<div key={index} className="bg-neutral-700 rounded-lg border border-neutral-600 p-3 hover:border-neutral-500 transition-colors">
 															<Row className="justify-between items-start gap-3">
 																<Col className="flex-1 min-w-0">
 																	<div className="font-mono text-sm text-white truncate">{tool.name}</div>
