@@ -8,7 +8,8 @@ import Col from '../components/Col'
 import Row from '../components/Row'
 import { Collapsible } from '@base-ui-components/react/collapsible'
 import { Switch } from '@base-ui-components/react/switch'
-import { IconTrash, IconRefresh, IconTool } from '@tabler/icons-react'
+import { Dialog } from '@base-ui-components/react/dialog'
+import { IconTrash, IconRefresh, IconTool, IconSettings } from '@tabler/icons-react'
 
 function ChevronIcon(props: React.ComponentProps<'svg'>) {
 	return (
@@ -25,6 +26,17 @@ export default function DashboardPage() {
 	const [isLoading, setIsLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const [refreshingTools, setRefreshingTools] = useState<string | null>(null)
+	const [selectedServer, setSelectedServer] = useState<{
+		_id: string
+		serverName: string
+		serverUrl: string
+		description?: string
+		tools?: Array<{ name: string; description?: string }>
+		enabled: boolean
+		userId: string
+		createdAt: number
+		lastToolsUpdate?: number
+	} | null>(null)
 
 	// Get user and organization info from WorkOS
 	const { userId, primaryOrganization, loading: orgLoading } = useUserOrganizations()
@@ -262,26 +274,13 @@ export default function DashboardPage() {
 											<div className='font-medium text-white'>{server.serverName}</div>
 											<Row className='items-center gap-2'>
 												{isOwnedByUser && (
-													<>
-														<button
-															onClick={() => handleRefreshTools(server._id, server.serverName, server.serverUrl)}
-															disabled={refreshingTools === server._id}
-															className='p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-600 rounded-md disabled:opacity-50'
-															title='Refresh tools'
-														>
-															<IconRefresh 
-																size={16} 
-																className={refreshingTools === server._id ? 'animate-spin' : ''} 
-															/>
-														</button>
-														<button
-															onClick={() => handleDeleteServer(server._id)}
-															className='p-1.5 text-red-400 hover:bg-red-900/30 rounded-md'
-															title='Delete server'
-														>
-															<IconTrash size={16} />
-														</button>
-													</>
+													<button
+														onClick={() => setSelectedServer(server)}
+														className='p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-600 rounded-md'
+														title='Server settings'
+													>
+														<IconSettings size={16} />
+													</button>
 												)}
 												<Switch.Root
 													checked={server.enabled}
@@ -299,49 +298,24 @@ export default function DashboardPage() {
 											</p>
 										)}
 
-										{/* Tools info */}
-										<Row className='items-center gap-2 text-xs text-neutral-400'>
-											<IconTool size={14} />
-											<span>
-												{server.tools ? 
-													`${server.tools.length} tool${server.tools.length === 1 ? '' : 's'}` : 
-													'No tools loaded'
-												}
-											</span>
-											{server.lastToolsUpdate && (
-												<span className='text-neutral-500'>
-													• Updated {new Date(server.lastToolsUpdate).toLocaleDateString()}
-												</span>
-											)}
-										</Row>
-
-										{/* Expandable tools list */}
-										{server.tools && server.tools.length > 0 && (
-											<Collapsible.Root className="w-full">
-												<Collapsible.Trigger className="group flex items-center gap-2 w-full text-left focus:outline-none rounded-md py-1 -m-1 cursor-pointer text-xs text-neutral-400 hover:text-neutral-300">
-													<ChevronIcon className="size-3 text-neutral-500 transition-all ease-out group-data-[panel-open]:rotate-90" />
-													<span>View tools</span>
-												</Collapsible.Trigger>
-												<Collapsible.Panel className="flex h-[var(--collapsible-panel-height)] flex-col justify-end overflow-hidden transition-all ease-out data-[ending-style]:h-0 data-[starting-style]:h-0">
-													<div className="mt-2 pl-4 border-l border-neutral-600 space-y-2">
-														{server.tools.map((tool, index) => (
-															<div key={index} className="text-xs">
-																<div className="font-mono text-neutral-300">{tool.name}</div>
-																{tool.description && (
-																	<div className="text-neutral-500 mt-0.5 leading-relaxed">
-																		{tool.description}
-																	</div>
-																)}
-															</div>
-														))}
-													</div>
-												</Collapsible.Panel>
-											</Collapsible.Root>
+										{/* Tools pills */}
+										{server.tools && server.tools.length > 0 ? (
+											<div className='flex flex-wrap gap-1.5'>
+												{server.tools.map((tool, index) => (
+													<span 
+														key={index} 
+														className='px-2 py-0.5 bg-neutral-700 text-neutral-300 rounded text-xs font-mono border border-neutral-400'
+													>
+														{tool.name}
+													</span>
+												))}
+											</div>
+										) : (
+											<Row className='items-center gap-2 text-xs text-neutral-400'>
+												<IconTool size={14} />
+												<span>No tools loaded</span>
+											</Row>
 										)}
-
-										<Row className='justify-between items-center text-xs text-neutral-500'>
-											<span>Added: {new Date(server.createdAt).toLocaleDateString()}</span>
-										</Row>
 									</Col>
 								</div>
 							)
@@ -349,6 +323,139 @@ export default function DashboardPage() {
 					</div>
 				)}
 			</div>
+
+			{/* Settings Dialog */}
+			<Dialog.Root open={!!selectedServer} onOpenChange={(open) => !open && setSelectedServer(null)}>
+				<Dialog.Portal>
+					<Dialog.Backdrop className="fixed inset-0 bg-black opacity-70 transition-all duration-150 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0" />
+					<Dialog.Popup className="fixed top-1/2 left-1/2 -mt-8 w-[600px] max-w-[calc(100vw-3rem)] max-h-[calc(100vh-6rem)] -translate-x-1/2 -translate-y-1/2 rounded-lg bg-neutral-800 p-6 text-white outline-1 outline-neutral-600 transition-all duration-150 data-[ending-style]:scale-90 data-[ending-style]:opacity-0 data-[starting-style]:scale-90 data-[starting-style]:opacity-0 overflow-y-auto">
+						{selectedServer && (
+							<>
+								<Dialog.Title className="-mt-1.5 mb-4 text-xl font-semibold">
+									Server Settings
+								</Dialog.Title>
+								
+								<Col className="gap-6">
+									{/* Server Details */}
+									<div>
+										<h3 className="text-sm font-medium text-neutral-400 mb-2">Server Name</h3>
+										<p className="text-white">{selectedServer.serverName}</p>
+									</div>
+
+									{selectedServer.description && (
+										<div>
+											<h3 className="text-sm font-medium text-neutral-400 mb-2">Description</h3>
+											<p className="text-neutral-300">{selectedServer.description}</p>
+										</div>
+									)}
+
+									{/* Tools Section */}
+									<div>
+										<h3 className="text-sm font-medium text-neutral-400 mb-2">
+											Tools ({selectedServer.tools ? selectedServer.tools.length : 0})
+										</h3>
+										{selectedServer.tools && selectedServer.tools.length > 0 ? (
+											<div className="bg-neutral-900 rounded-md p-4 max-h-64 overflow-y-auto">
+												<div className="space-y-3">
+													{selectedServer.tools.map((tool, index) => (
+														<div key={index} className="border-b border-neutral-700 pb-3 last:border-0">
+															<div className="font-mono text-sm text-white">{tool.name}</div>
+															{tool.description && (
+																<div className="text-xs text-neutral-400 mt-1 leading-relaxed">
+																	{tool.description}
+																</div>
+															)}
+														</div>
+													))}
+												</div>
+											</div>
+										) : (
+											<p className="text-neutral-500 text-sm">No tools loaded</p>
+										)}
+									</div>
+
+									{/* Metadata */}
+									<div className="grid grid-cols-2 gap-4 text-sm">
+										<div>
+											<h3 className="text-neutral-400 mb-1">Created</h3>
+											<p className="text-neutral-300">
+												{new Date(selectedServer.createdAt).toLocaleDateString()} at{' '}
+												{new Date(selectedServer.createdAt).toLocaleTimeString()}
+											</p>
+										</div>
+										{selectedServer.lastToolsUpdate && (
+											<div>
+												<h3 className="text-neutral-400 mb-1">Last Tools Update</h3>
+												<p className="text-neutral-300">
+													{new Date(selectedServer.lastToolsUpdate).toLocaleDateString()} at{' '}
+													{new Date(selectedServer.lastToolsUpdate).toLocaleTimeString()}
+												</p>
+											</div>
+										)}
+									</div>
+
+									{/* Actions */}
+									<div className="border-t border-neutral-700 pt-4">
+										<Row className="justify-between items-center">
+											<Row className="items-center gap-3">
+												{/* Enable/Disable Toggle */}
+												<Row className="items-center gap-2">
+													<label className="text-sm text-neutral-400">Enabled:</label>
+													<Switch.Root
+														checked={selectedServer.enabled}
+														onCheckedChange={(checked) => {
+															handleToggleServer(selectedServer._id, checked)
+															// Update the selected server state to reflect the change
+															setSelectedServer({ ...selectedServer, enabled: checked })
+														}}
+														className="relative flex h-5 w-9 cursor-pointer rounded-full bg-neutral-900 p-px shadow-[inset_0_1.5px_2px] shadow-white/20 outline-1 -outline-offset-1 outline-white/30 transition-[background-color,box-shadow] duration-200 ease-out before:absolute before:rounded-full before:outline-offset-2 before:outline-red-300 focus-visible:before:inset-0 focus-visible:before:outline-2 active:bg-neutral-800 data-[checked]:bg-red-400 data-[checked]:shadow-white/30 data-[checked]:outline-white/40 data-[checked]:active:bg-red-300"
+													>
+														<Switch.Thumb className="aspect-square h-full rounded-full bg-white shadow-[0_0_1px_1px,0_1px_1px,1px_2px_4px_-1px] shadow-white/20 transition-transform duration-200 data-[checked]:translate-x-4 data-[checked]:shadow-white/30" />
+													</Switch.Root>
+												</Row>
+
+												{/* Only show refresh and delete if user owns the server */}
+												{selectedServer.userId === userId && (
+													<>
+														<button
+															onClick={() => {
+																handleRefreshTools(selectedServer._id, selectedServer.serverName, selectedServer.serverUrl)
+															}}
+															disabled={refreshingTools === selectedServer._id}
+															className="px-3 py-1.5 bg-neutral-700 text-white rounded-md hover:bg-neutral-600 disabled:opacity-50 text-sm font-medium flex items-center gap-2"
+														>
+															<IconRefresh 
+																size={16} 
+																className={refreshingTools === selectedServer._id ? 'animate-spin' : ''} 
+															/>
+															Refresh Tools
+														</button>
+														
+														<button
+															onClick={() => {
+																handleDeleteServer(selectedServer._id)
+																setSelectedServer(null)
+															}}
+															className="px-3 py-1.5 bg-red-900/30 text-red-400 rounded-md hover:bg-red-900/50 text-sm font-medium flex items-center gap-2"
+														>
+															<IconTrash size={16} />
+															Delete Server
+														</button>
+													</>
+												)}
+											</Row>
+
+											<Dialog.Close className="px-4 py-2 bg-neutral-700 text-white rounded-md hover:bg-neutral-600 font-medium text-sm">
+												Close
+											</Dialog.Close>
+										</Row>
+									</div>
+								</Col>
+							</>
+						)}
+					</Dialog.Popup>
+				</Dialog.Portal>
+			</Dialog.Root>
 		</Col>
 	)
 }
