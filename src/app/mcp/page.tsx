@@ -8,6 +8,7 @@ import Col from '../components/Col'
 import Row from '../components/Row'
 import { Collapsible } from '@base-ui-components/react/collapsible'
 import { Switch } from '@base-ui-components/react/switch'
+import { IconTrash } from '@tabler/icons-react'
 
 function ChevronIcon(props: React.ComponentProps<'svg'>) {
 	return (
@@ -220,38 +221,38 @@ export default function DashboardPage() {
 											: 'border-neutral-600'
 									}`}
 								>
-									<Row className='justify-between items-start mb-2'>
-										<Col className='gap-3 flex-1'>
-											<Row className='justify-between items-center'>
-												<div className='font-medium text-white'>{server.serverName}</div>
+									<Col className='gap-3'>
+										<Row className='justify-between items-center'>
+											<div className='font-medium text-white'>{server.serverName}</div>
+											<Row className='items-center gap-2'>
+												{isOwnedByUser && (
+													<button
+														onClick={() => handleDeleteServer(server._id)}
+														className='p-1.5 text-red-400 hover:bg-red-900/30 rounded-md'
+													>
+														<IconTrash size={18} />
+													</button>
+												)}
 												<Switch.Root
 													checked={server.enabled}
 													onCheckedChange={(checked) => handleToggleServer(server._id, checked)}
-													className="relative flex h-6 w-10 cursor-pointer rounded-full bg-gradient-to-r from-neutral-700 from-35% to-neutral-400 to-65% bg-[length:6.5rem_100%] bg-[100%_0%] bg-no-repeat p-px shadow-[inset_0_1.5px_2px] shadow-neutral-500 outline outline-1 -outline-offset-1 outline-neutral-500 transition-[background-position,box-shadow] duration-75 ease-out before:absolute before:rounded-full before:outline-offset-2 before:outline-red-300 focus-visible:before:inset-0 focus-visible:before:outline focus-visible:before:outline-2 active:bg-neutral-600 data-[checked]:bg-[0%_0%] data-[checked]:active:bg-neutral-500"
+													className="relative flex h-5 w-9 cursor-pointer rounded-full bg-neutral-900 p-px shadow-[inset_0_1.5px_2px] shadow-white/20 outline-1 -outline-offset-1 outline-white/30 transition-[background-color,box-shadow] duration-200 ease-out before:absolute before:rounded-full before:outline-offset-2 before:outline-red-300 focus-visible:before:inset-0 focus-visible:before:outline-2 active:bg-neutral-800 data-[checked]:bg-red-400 data-[checked]:shadow-white/30 data-[checked]:outline-white/40 data-[checked]:active:bg-red-300"
 												>
-													<Switch.Thumb className="aspect-square h-full rounded-full bg-white shadow-[0_0_1px_1px,0_1px_1px,1px_2px_4px_-1px] shadow-neutral-600 transition-transform duration-75 data-[checked]:translate-x-4" />
+													<Switch.Thumb className="aspect-square h-full rounded-full bg-white shadow-[0_0_1px_1px,0_1px_1px,1px_2px_4px_-1px] shadow-white/20 transition-transform duration-200 data-[checked]:translate-x-4 data-[checked]:shadow-white/30" />
 												</Switch.Root>
 											</Row>
+										</Row>
 
-											{server.description && (
-												<p className='text-sm text-neutral-300 line-clamp-2'>
-													{server.description}
-												</p>
-											)}
-
-											<Row className='justify-between items-center text-xs text-neutral-500'>
-												<span>Added: {new Date(server.createdAt).toLocaleDateString()}</span>
-											</Row>
-										</Col>
-										{isOwnedByUser && (
-											<button
-												onClick={() => handleDeleteServer(server._id)}
-												className='px-3 py-1 text-red-300 hover:bg-red-900/30 rounded-md ml-4'
-											>
-												Delete
-											</button>
+										{server.description && (
+											<p className='text-sm text-neutral-300 line-clamp-2'>
+												{server.description}
+											</p>
 										)}
-									</Row>
+
+										<Row className='justify-between items-center text-xs text-neutral-500'>
+											<span>Added: {new Date(server.createdAt).toLocaleDateString()}</span>
+										</Row>
+									</Col>
 								</div>
 							)
 						})}
