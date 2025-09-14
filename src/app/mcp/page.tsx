@@ -7,6 +7,7 @@ import { api } from '../../../convex/_generated/api'
 import Col from '../components/Col'
 import Row from '../components/Row'
 import { Collapsible } from '@base-ui-components/react/collapsible'
+import { Switch } from '@base-ui-components/react/switch'
 
 function ChevronIcon(props: React.ComponentProps<'svg'>) {
 	return (
@@ -29,12 +30,13 @@ export default function DashboardPage() {
 	// Fetch organization servers
 	const organizationServers = useQuery(
 		api.mcpServers.listOrganizationServers,
-		primaryOrganization ? { organizationId: primaryOrganization.id } : 'skip'
+		primaryOrganization ? { organizationId: primaryOrganization.id, userId: userId || undefined } : 'skip'
 	)
 
 	// Mutations
 	const addServer = useMutation(api.mcpServers.addMcpServer)
 	const deleteServer = useMutation(api.mcpServers.deleteMcpServer)
+	const toggleServer = useMutation(api.users.toggleServerEnabled)
 
 	const handleAddServer = async (e: React.FormEvent) => {
 		e.preventDefault()
@@ -74,6 +76,20 @@ export default function DashboardPage() {
 			await deleteServer({ id: id as Parameters<typeof deleteServer>[0]['id'] })
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Failed to delete server')
+		}
+	}
+
+	const handleToggleServer = async (serverId: string, enabled: boolean) => {
+		if (!userId) return
+		
+		try {
+			await toggleServer({ 
+				userId, 
+				serverId: serverId as Parameters<typeof toggleServer>[0]['serverId'],
+				enabled 
+			})
+		} catch (err) {
+			setError(err instanceof Error ? err.message : 'Failed to toggle server')
 		}
 	}
 
@@ -206,7 +222,16 @@ export default function DashboardPage() {
 								>
 									<Row className='justify-between items-start mb-2'>
 										<Col className='gap-3 flex-1'>
-											<div className='font-medium text-white'>{server.serverName}</div>
+											<Row className='justify-between items-center'>
+												<div className='font-medium text-white'>{server.serverName}</div>
+												<Switch.Root
+													checked={server.enabled}
+													onCheckedChange={(checked) => handleToggleServer(server._id, checked)}
+													className="relative flex h-6 w-10 cursor-pointer rounded-full bg-gradient-to-r from-neutral-700 from-35% to-neutral-400 to-65% bg-[length:6.5rem_100%] bg-[100%_0%] bg-no-repeat p-px shadow-[inset_0_1.5px_2px] shadow-neutral-500 outline outline-1 -outline-offset-1 outline-neutral-500 transition-[background-position,box-shadow] duration-75 ease-out before:absolute before:rounded-full before:outline-offset-2 before:outline-red-300 focus-visible:before:inset-0 focus-visible:before:outline focus-visible:before:outline-2 active:bg-neutral-600 data-[checked]:bg-[0%_0%] data-[checked]:active:bg-neutral-500"
+												>
+													<Switch.Thumb className="aspect-square h-full rounded-full bg-white shadow-[0_0_1px_1px,0_1px_1px,1px_2px_4px_-1px] shadow-neutral-600 transition-transform duration-75 data-[checked]:translate-x-4" />
+												</Switch.Root>
+											</Row>
 
 											{server.description && (
 												<p className='text-sm text-neutral-300 line-clamp-2'>

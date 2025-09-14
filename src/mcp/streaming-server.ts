@@ -46,11 +46,11 @@ export class StreamingMcpServer {
 
 	private async fetchUserServers(userId: string): Promise<UpstreamConfig[]> {
 		try {
-			// Fetch user's servers from Convex
-			const userServers = await convexClient.query(api.mcpServers.getMcpServers, { userId })
+			// Fetch user's enabled servers from Convex
+			const enabledServers = await convexClient.query(api.mcpServers.getUserEnabledMcpServers, { userId })
 			
-			console.log(`Loaded ${userServers.length} MCP servers for user ${userId}`)
-			return userServers
+			console.log(`Loaded ${enabledServers.length} enabled MCP servers for user ${userId}`)
+			return enabledServers
 		} catch (error) {
 			console.error('Failed to fetch user servers:', error)
 			return []

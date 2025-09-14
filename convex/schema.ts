@@ -13,4 +13,12 @@ export default defineSchema({
 		.index('by_user', ['userId'])
 		.index('by_user_and_name', ['userId', 'serverName'])
 		.index('by_organization', ['organizationId']),
+	
+	users: defineTable({
+		userId: v.string(),
+		enabledServers: v.array(v.id('mcpServers')),
+		createdAt: v.number(),
+		updatedAt: v.number(),
+	})
+		.index('by_userId', ['userId']),
 })

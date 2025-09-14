@@ -57,17 +57,62 @@ export const getMcpServers = query({
 			.withIndex('by_user', (q) => q.eq('userId', args.userId))
 			.collect()
 
+		// Get user's enabled servers
+		const user = await ctx.db
+			.query('users')
+			.withIndex('by_userId', (q) => q.eq('userId', args.userId))
+			.first()
+		
+		const enabledServerIds = user?.enabledServers || []
+
 		return servers.map((server) => ({
 			id: server._id,
 			name: server.serverName,
 			url: server.serverUrl,
+			enabled: enabledServerIds.includes(server._id),
 		}))
+	},
+})
+
+export const getUserEnabledMcpServers = query({
+	args: {
+		userId: v.string(),
+	},
+	handler: async (ctx, args) => {
+		// Get user record to find enabled server IDs
+		const user = await ctx.db
+			.query('users')
+			.withIndex('by_userId', (q) => q.eq('userId', args.userId))
+			.first()
+
+		// If no user record exists, return empty array (no servers enabled yet)
+		if (!user || !user.enabledServers || user.enabledServers.length === 0) {
+			return []
+		}
+
+		// Fetch all enabled servers
+		const enabledServers = await Promise.all(
+			user.enabledServers.map(async (serverId) => {
+				const server = await ctx.db.get(serverId)
+				if (!server) return null
+				return {
+					id: server._id,
+					name: server.serverName,
+					url: server.serverUrl,
+					enabled: true,
+				}
+			})
+		)
+
+		// Filter out any null values (deleted servers)
+		return enabledServers.filter(server => server !== null)
 	},
 })
 
 export const listOrganizationServers = query({
 	args: {
 		organizationId: v.string(),
+		userId: v.optional(v.string()),
 	},
 	handler: async (ctx, args) => {
 		const servers = await ctx.db
@@ -75,7 +120,25 @@ export const listOrganizationServers = query({
 			.filter((q) => q.eq(q.field('organizationId'), args.organizationId))
 			.collect()
 
-		return servers
+		// If userId is provided, get their enabled servers
+		let enabledServerIds: string[] = []
+		if (args.userId) {
+			const userId = args.userId
+			const user = await ctx.db
+				.query('users')
+				.withIndex('by_userId', (q) => q.eq('userId', userId))
+				.first()
+			
+			if (user) {
+				enabledServerIds = user.enabledServers || []
+			}
+		}
+
+		// Add enabled status to each server
+		return servers.map(server => ({
+			...server,
+			enabled: enabledServerIds.includes(server._id),
+		}))
 	},
 })
 
