@@ -171,7 +171,7 @@ export default function DashboardPage() {
 					disabled={!userId || !primaryOrganization}
 					className='px-4 py-2 bg-white text-black rounded-md hover:bg-neutral-200 disabled:bg-neutral-600 disabled:text-neutral-400 disabled:cursor-not-allowed font-medium'
 				>
-					Add New Server
+					Add MCP
 				</button>
 			</div>
 
@@ -228,12 +228,10 @@ export default function DashboardPage() {
 													</button>
 												)}
 												<Tooltip.Root>
-													<Tooltip.Trigger 
-														onClick={() => handleToggleServer(server._id, !server.enabled)}
-														className="inline-flex items-center"
-													>
+													<Tooltip.Trigger className="inline-flex items-center">
 														<Switch.Root
 															checked={server.enabled}
+															onCheckedChange={(checked) => handleToggleServer(server._id, checked)}
 															className="relative flex h-5 w-9 cursor-pointer rounded-full bg-neutral-900 p-px shadow-[inset_0_1.5px_2px] shadow-white/20 outline-1 -outline-offset-1 outline-white/30 transition-[background-color,box-shadow] duration-200 ease-out before:absolute before:rounded-full before:outline-offset-2 before:outline-red-300 focus-visible:before:inset-0 focus-visible:before:outline-2 active:bg-neutral-800 data-[checked]:bg-red-400 data-[checked]:shadow-white/30 data-[checked]:outline-white/40 data-[checked]:active:bg-red-300"
 														>
 															<Switch.Thumb className="aspect-square h-full rounded-full bg-white shadow-[0_0_1px_1px,0_1px_1px,1px_2px_4px_-1px] shadow-white/20 transition-transform duration-200 data-[checked]:translate-x-4 data-[checked]:shadow-white/30" />
@@ -312,7 +310,7 @@ export default function DashboardPage() {
 					<Dialog.Backdrop className="fixed inset-0 bg-black opacity-70 transition-all duration-150 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0" />
 					<Dialog.Popup className="fixed top-1/2 left-1/2 -mt-8 w-[500px] max-w-[calc(100vw-3rem)] -translate-x-1/2 -translate-y-1/2 rounded-lg bg-neutral-800 p-6 text-white outline-1 outline-neutral-600 transition-all duration-150 data-[ending-style]:scale-90 data-[ending-style]:opacity-0 data-[starting-style]:scale-90 data-[starting-style]:opacity-0">
 						<Dialog.Title className="-mt-1.5 mb-4 text-xl font-semibold">
-							Add New Server
+							Add MCP
 						</Dialog.Title>
 
 						{!orgLoading && !primaryOrganization && (
@@ -459,12 +457,12 @@ export default function DashboardPage() {
 																</Col>
 																{selectedServer.userId === userId && (
 																	<Tooltip.Root>
-																		<Tooltip.Trigger 
-																			onClick={() => handleToggleToolEnabled(selectedServer._id, tool.name, !tool.enabled)}
-																			className="inline-flex items-center"
-																		>
+																		<Tooltip.Trigger className="inline-flex items-center">
 																			<Switch.Root
 																				checked={tool.enabled}
+																				onCheckedChange={(checked) => {
+																					handleToggleToolEnabled(selectedServer._id, tool.name, checked)
+																				}}
 																				className="relative flex h-4 w-7 cursor-pointer rounded-full bg-neutral-900 p-px shadow-[inset_0_1.5px_2px] shadow-white/20 outline-1 -outline-offset-1 outline-white/30 transition-[background-color,box-shadow] duration-200 ease-out before:absolute before:rounded-full before:outline-offset-2 before:outline-red-300 focus-visible:before:inset-0 focus-visible:before:outline-2 active:bg-neutral-800 data-[checked]:bg-red-400 data-[checked]:shadow-white/30 data-[checked]:outline-white/40 data-[checked]:active:bg-red-300"
 																			>
 																				<Switch.Thumb className="aspect-square h-full rounded-full bg-white shadow-[0_0_1px_1px,0_1px_1px,1px_2px_4px_-1px] shadow-white/20 transition-transform duration-200 data-[checked]:translate-x-3 data-[checked]:shadow-white/30" />
