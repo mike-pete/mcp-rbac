@@ -2,6 +2,7 @@ import { signOut, withAuth } from '@workos-inc/authkit-nextjs'
 import UserAvatar from '../components/Avatar'
 import Col from '../components/Col'
 import Row from '../components/Row'
+import ChampionCrown from '../components/ChampionCrown'
 
 export default async function ProtectedPage({ children }: { children: React.ReactNode }) {
 	return (
@@ -22,7 +23,12 @@ async function Header() {
 				{/* User info */}
 				<Row className='gap-3 items-center'>
 					<Col className='gap-0.5 items-end'>
-						{name && <p className='text-base font-bold text-white'>{name}</p>}
+						{name && (
+							<Row className='gap-1.5 items-center'>
+								<p className='text-base font-bold text-white'>{name}</p>
+								{user?.id && <ChampionCrown userId={user.id} />}
+							</Row>
+						)}
 						<form
 							className='contents'
 							action={async () => {

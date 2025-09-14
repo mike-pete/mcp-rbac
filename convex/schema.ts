@@ -24,6 +24,7 @@ export default defineSchema({
 	users: defineTable({
 		userId: v.string(),
 		enabledServers: v.array(v.id('mcpServers')),
+		isChampion: v.optional(v.boolean()),
 		createdAt: v.number(),
 		updatedAt: v.number(),
 	})

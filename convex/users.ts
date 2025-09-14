@@ -93,3 +93,17 @@ export const getOrCreateUser = mutation({
 		return user
 	},
 })
+
+export const getUser = query({
+	args: {
+		userId: v.string(),
+	},
+	handler: async (ctx, args) => {
+		const user = await ctx.db
+			.query('users')
+			.withIndex('by_userId', (q) => q.eq('userId', args.userId))
+			.first()
+
+		return user
+	},
+})

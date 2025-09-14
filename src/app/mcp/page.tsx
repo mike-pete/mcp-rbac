@@ -265,14 +265,16 @@ export default function DashboardPage() {
 													</button>
 												)}
 												<Tooltip.Root>
-													<Tooltip.Trigger className="inline-flex items-center">
-														<Switch.Root
-															checked={server.enabled}
-															onCheckedChange={(checked) => handleToggleServer(server._id, checked)}
-															className="relative flex h-5 w-9 cursor-pointer rounded-full bg-neutral-900 p-px shadow-[inset_0_1.5px_2px] shadow-white/20 outline-1 -outline-offset-1 outline-white/30 transition-[background-color,box-shadow] duration-200 ease-out before:absolute before:rounded-full before:outline-offset-2 before:outline-red-300 focus-visible:before:inset-0 focus-visible:before:outline-2 active:bg-neutral-800 data-[checked]:bg-red-400 data-[checked]:shadow-white/30 data-[checked]:outline-white/40 data-[checked]:active:bg-red-300"
-														>
-															<Switch.Thumb className="aspect-square h-full rounded-full bg-white shadow-[0_0_1px_1px,0_1px_1px,1px_2px_4px_-1px] shadow-white/20 transition-transform duration-200 data-[checked]:translate-x-4 data-[checked]:shadow-white/30" />
-														</Switch.Root>
+													<Tooltip.Trigger>
+														<div className="inline-flex items-center">
+															<Switch.Root
+																checked={server.enabled}
+																onCheckedChange={(checked) => handleToggleServer(server._id, checked)}
+																className="relative flex h-5 w-9 cursor-pointer rounded-full bg-neutral-900 p-px shadow-[inset_0_1.5px_2px] shadow-white/20 outline-1 -outline-offset-1 outline-white/30 transition-[background-color,box-shadow] duration-200 ease-out before:absolute before:rounded-full before:outline-offset-2 before:outline-red-300 focus-visible:before:inset-0 focus-visible:before:outline-2 active:bg-neutral-800 data-[checked]:bg-red-400 data-[checked]:shadow-white/30 data-[checked]:outline-white/40 data-[checked]:active:bg-red-300"
+															>
+																<Switch.Thumb className="aspect-square h-full rounded-full bg-white shadow-[0_0_1px_1px,0_1px_1px,1px_2px_4px_-1px] shadow-white/20 transition-transform duration-200 data-[checked]:translate-x-4 data-[checked]:shadow-white/30" />
+															</Switch.Root>
+														</div>
 													</Tooltip.Trigger>
 													<Tooltip.Portal>
 														<Tooltip.Positioner sideOffset={10}>
@@ -501,16 +503,18 @@ export default function DashboardPage() {
 																</Col>
 																{selectedServer.userId === userId && (
 																	<Tooltip.Root>
-																		<Tooltip.Trigger className="inline-flex items-center">
-																			<Switch.Root
-																				checked={tool.enabled}
-																				onCheckedChange={(checked) => {
-																					handleToggleToolEnabled(selectedServer._id, tool.name, checked)
-																				}}
-																				className="relative flex h-4 w-7 cursor-pointer rounded-full bg-neutral-900 p-px shadow-[inset_0_1.5px_2px] shadow-white/20 outline-1 -outline-offset-1 outline-white/30 transition-[background-color,box-shadow] duration-200 ease-out before:absolute before:rounded-full before:outline-offset-2 before:outline-red-300 focus-visible:before:inset-0 focus-visible:before:outline-2 active:bg-neutral-800 data-[checked]:bg-red-400 data-[checked]:shadow-white/30 data-[checked]:outline-white/40 data-[checked]:active:bg-red-300"
-																			>
-																				<Switch.Thumb className="aspect-square h-full rounded-full bg-white shadow-[0_0_1px_1px,0_1px_1px,1px_2px_4px_-1px] shadow-white/20 transition-transform duration-200 data-[checked]:translate-x-3 data-[checked]:shadow-white/30" />
-																			</Switch.Root>
+																		<Tooltip.Trigger>
+																			<div className="inline-flex items-center">
+																				<Switch.Root
+																					checked={tool.enabled}
+																					onCheckedChange={(checked) => {
+																						handleToggleToolEnabled(selectedServer._id, tool.name, checked)
+																					}}
+																					className="relative flex h-4 w-7 cursor-pointer rounded-full bg-neutral-900 p-px shadow-[inset_0_1.5px_2px] shadow-white/20 outline-1 -outline-offset-1 outline-white/30 transition-[background-color,box-shadow] duration-200 ease-out before:absolute before:rounded-full before:outline-offset-2 before:outline-red-300 focus-visible:before:inset-0 focus-visible:before:outline-2 active:bg-neutral-800 data-[checked]:bg-red-400 data-[checked]:shadow-white/30 data-[checked]:outline-white/40 data-[checked]:active:bg-red-300"
+																				>
+																					<Switch.Thumb className="aspect-square h-full rounded-full bg-white shadow-[0_0_1px_1px,0_1px_1px,1px_2px_4px_-1px] shadow-white/20 transition-transform duration-200 data-[checked]:translate-x-3 data-[checked]:shadow-white/30" />
+																				</Switch.Root>
+																			</div>
 																		</Tooltip.Trigger>
 																		<Tooltip.Portal>
 																			<Tooltip.Positioner sideOffset={10}>
