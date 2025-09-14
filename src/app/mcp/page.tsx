@@ -1,14 +1,14 @@
 'use client'
 
 import { useUserOrganizations } from '@/hooks/useUserOrganizations'
-import { useMutation, useQuery } from 'convex/react'
+import { useMutation, useQuery, useAction } from 'convex/react'
 import { useState } from 'react'
 import { api } from '../../../convex/_generated/api'
 import Col from '../components/Col'
 import Row from '../components/Row'
 import { Collapsible } from '@base-ui-components/react/collapsible'
 import { Switch } from '@base-ui-components/react/switch'
-import { IconTrash } from '@tabler/icons-react'
+import { IconTrash, IconRefresh, IconTool } from '@tabler/icons-react'
 
 function ChevronIcon(props: React.ComponentProps<'svg'>) {
 	return (
@@ -24,6 +24,7 @@ export default function DashboardPage() {
 	const [description, setDescription] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
+	const [refreshingTools, setRefreshingTools] = useState<string | null>(null)
 
 	// Get user and organization info from WorkOS
 	const { userId, primaryOrganization, loading: orgLoading } = useUserOrganizations()
@@ -34,10 +35,12 @@ export default function DashboardPage() {
 		primaryOrganization ? { organizationId: primaryOrganization.id, userId: userId || undefined } : 'skip'
 	)
 
-	// Mutations
+	// Mutations and actions
 	const addServer = useMutation(api.mcpServers.addMcpServer)
 	const deleteServer = useMutation(api.mcpServers.deleteMcpServer)
 	const toggleServer = useMutation(api.users.toggleServerEnabled)
+	const fetchServerTools = useAction(api.mcpServers.fetchServerTools)
+	const updateServerTools = useMutation(api.mcpServers.updateServerTools)
 
 	const handleAddServer = async (e: React.FormEvent) => {
 		e.preventDefault()
@@ -55,13 +58,25 @@ export default function DashboardPage() {
 		setError(null)
 
 		try {
+			const trimmedServerName = serverName.trim()
+			const trimmedServerUrl = serverUrl.trim()
+			
+			// First fetch the tools
+			const tools = await fetchServerTools({
+				serverName: trimmedServerName,
+				serverUrl: trimmedServerUrl,
+			})
+
+			// Then add the server with the tools
 			await addServer({
 				userId,
 				organizationId: primaryOrganization.id,
-				serverName: serverName.trim(),
-				serverUrl: serverUrl.trim(),
+				serverName: trimmedServerName,
+				serverUrl: trimmedServerUrl,
 				description: description.trim() || undefined,
+				tools,
 			})
+			
 			setServerName('')
 			setServerUrl('')
 			setDescription('')
@@ -91,6 +106,27 @@ export default function DashboardPage() {
 			})
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Failed to toggle server')
+		}
+	}
+
+	const handleRefreshTools = async (serverId: string, serverName: string, serverUrl: string) => {
+		setRefreshingTools(serverId)
+		setError(null)
+		
+		try {
+			const tools = await fetchServerTools({
+				serverName,
+				serverUrl,
+			})
+			
+			await updateServerTools({
+				id: serverId as Parameters<typeof updateServerTools>[0]['id'],
+				tools,
+			})
+		} catch (err) {
+			setError(err instanceof Error ? err.message : 'Failed to refresh tools')
+		} finally {
+			setRefreshingTools(null)
 		}
 	}
 
@@ -226,12 +262,26 @@ export default function DashboardPage() {
 											<div className='font-medium text-white'>{server.serverName}</div>
 											<Row className='items-center gap-2'>
 												{isOwnedByUser && (
-													<button
-														onClick={() => handleDeleteServer(server._id)}
-														className='p-1.5 text-red-400 hover:bg-red-900/30 rounded-md'
-													>
-														<IconTrash size={18} />
-													</button>
+													<>
+														<button
+															onClick={() => handleRefreshTools(server._id, server.serverName, server.serverUrl)}
+															disabled={refreshingTools === server._id}
+															className='p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-600 rounded-md disabled:opacity-50'
+															title='Refresh tools'
+														>
+															<IconRefresh 
+																size={16} 
+																className={refreshingTools === server._id ? 'animate-spin' : ''} 
+															/>
+														</button>
+														<button
+															onClick={() => handleDeleteServer(server._id)}
+															className='p-1.5 text-red-400 hover:bg-red-900/30 rounded-md'
+															title='Delete server'
+														>
+															<IconTrash size={16} />
+														</button>
+													</>
 												)}
 												<Switch.Root
 													checked={server.enabled}
@@ -247,6 +297,46 @@ export default function DashboardPage() {
 											<p className='text-sm text-neutral-300 line-clamp-2'>
 												{server.description}
 											</p>
+										)}
+
+										{/* Tools info */}
+										<Row className='items-center gap-2 text-xs text-neutral-400'>
+											<IconTool size={14} />
+											<span>
+												{server.tools ? 
+													`${server.tools.length} tool${server.tools.length === 1 ? '' : 's'}` : 
+													'No tools loaded'
+												}
+											</span>
+											{server.lastToolsUpdate && (
+												<span className='text-neutral-500'>
+													• Updated {new Date(server.lastToolsUpdate).toLocaleDateString()}
+												</span>
+											)}
+										</Row>
+
+										{/* Expandable tools list */}
+										{server.tools && server.tools.length > 0 && (
+											<Collapsible.Root className="w-full">
+												<Collapsible.Trigger className="group flex items-center gap-2 w-full text-left focus:outline-none rounded-md py-1 -m-1 cursor-pointer text-xs text-neutral-400 hover:text-neutral-300">
+													<ChevronIcon className="size-3 text-neutral-500 transition-all ease-out group-data-[panel-open]:rotate-90" />
+													<span>View tools</span>
+												</Collapsible.Trigger>
+												<Collapsible.Panel className="flex h-[var(--collapsible-panel-height)] flex-col justify-end overflow-hidden transition-all ease-out data-[ending-style]:h-0 data-[starting-style]:h-0">
+													<div className="mt-2 pl-4 border-l border-neutral-600 space-y-2">
+														{server.tools.map((tool, index) => (
+															<div key={index} className="text-xs">
+																<div className="font-mono text-neutral-300">{tool.name}</div>
+																{tool.description && (
+																	<div className="text-neutral-500 mt-0.5 leading-relaxed">
+																		{tool.description}
+																	</div>
+																)}
+															</div>
+														))}
+													</div>
+												</Collapsible.Panel>
+											</Collapsible.Root>
 										)}
 
 										<Row className='justify-between items-center text-xs text-neutral-500'>

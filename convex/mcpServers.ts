@@ -1,5 +1,120 @@
 import { v } from 'convex/values'
-import { mutation, query } from './_generated/server'
+import { mutation, query, action } from './_generated/server'
+
+type McpServerTool = {
+	name: string
+	description?: string
+	inputSchema?: Record<string, unknown>
+}
+
+// Helper function to recursively remove $schema fields from objects
+function cleanSchema(obj: unknown): unknown {
+	if (!obj || typeof obj !== 'object') {
+		return obj
+	}
+	
+	if (Array.isArray(obj)) {
+		return obj.map(cleanSchema)
+	}
+	
+	const cleaned: Record<string, unknown> = {}
+	for (const [key, value] of Object.entries(obj)) {
+		if (key !== '$schema') {
+			cleaned[key] = cleanSchema(value)
+		}
+	}
+	return cleaned
+}
+
+export const fetchServerTools = action({
+	args: {
+		serverName: v.string(),
+		serverUrl: v.string(),
+	},
+	handler: async (_, args): Promise<McpServerTool[]> => {
+		try {
+			console.log(`Fetching tools for server: ${args.serverName} at ${args.serverUrl}`)
+			
+			// Make a request to initialize and list tools
+			const initRequest = {
+				jsonrpc: '2.0' as const,
+				method: 'initialize',
+				params: {
+					protocolVersion: '2024-11-05',
+					capabilities: { tools: {} },
+					clientInfo: { name: 'mcp-gateway', version: '1.0.0' },
+				},
+				id: 1,
+			}
+
+			const initResponse = await fetch(args.serverUrl, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' },
+				body: JSON.stringify(initRequest),
+			})
+
+			if (!initResponse.ok) {
+				throw new Error(`HTTP error! status: ${initResponse.status}`)
+			}
+
+			// List tools
+			const listToolsRequest = {
+				jsonrpc: '2.0' as const,
+				method: 'tools/list',
+				params: {},
+				id: 2,
+			}
+
+			const toolsResponse = await fetch(args.serverUrl, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' },
+				body: JSON.stringify(listToolsRequest),
+			})
+
+			if (!toolsResponse.ok) {
+				throw new Error(`HTTP error! status: ${toolsResponse.status}`)
+			}
+
+			const contentType = toolsResponse.headers.get('content-type') || ''
+			const text = await toolsResponse.text()
+			
+			let data
+			if (contentType.includes('text/event-stream')) {
+				// Parse SSE format
+				const lines = text.split('\n')
+				let jsonData = ''
+				for (const line of lines) {
+					if (line.startsWith('data: ')) {
+						jsonData += line.substring(6)
+					}
+				}
+				data = JSON.parse(jsonData)
+			} else {
+				data = JSON.parse(text)
+			}
+
+			if (data.error) {
+				throw new Error(`MCP error: ${data.error.message}`)
+			}
+
+			const tools = (data.result?.tools as Array<{
+				name: string
+				description?: string
+				inputSchema?: Record<string, unknown>
+			}>) || []
+			console.log(`Found ${tools.length} tools for ${args.serverName}:`, tools.map(t => t.name))
+			
+			return tools.map(tool => ({
+				name: tool.name,
+				description: tool.description,
+				inputSchema: tool.inputSchema ? cleanSchema(tool.inputSchema) as Record<string, unknown> : undefined,
+			}))
+		} catch (error) {
+			console.error(`Failed to fetch tools for server ${args.serverName}:`, error)
+			return []
+		}
+	},
+})
 
 export const addMcpServer = mutation({
 	args: {
@@ -8,6 +123,11 @@ export const addMcpServer = mutation({
 		serverName: v.string(),
 		serverUrl: v.string(),
 		description: v.optional(v.string()),
+		tools: v.optional(v.array(v.object({
+			name: v.string(),
+			description: v.optional(v.string()),
+			inputSchema: v.optional(v.any()),
+		}))),
 	},
 	handler: async (ctx, args) => {
 		// Check if server with same name already exists for this user
@@ -26,6 +146,8 @@ export const addMcpServer = mutation({
 			serverName: args.serverName,
 			serverUrl: args.serverUrl,
 			description: args.description,
+			tools: args.tools,
+			lastToolsUpdate: args.tools ? Date.now() : undefined,
 			createdAt: Date.now(),
 		})
 
@@ -163,6 +285,24 @@ export const updateMcpServer = mutation({
 
 		await ctx.db.patch(id, cleanUpdates)
 		return id
+	},
+})
+
+export const updateServerTools = mutation({
+	args: {
+		id: v.id('mcpServers'),
+		tools: v.array(v.object({
+			name: v.string(),
+			description: v.optional(v.string()),
+			inputSchema: v.optional(v.any()),
+		})),
+	},
+	handler: async (ctx, args) => {
+		await ctx.db.patch(args.id, {
+			tools: args.tools,
+			lastToolsUpdate: Date.now(),
+		})
+		return args.id
 	},
 })
 

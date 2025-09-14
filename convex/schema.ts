@@ -8,6 +8,12 @@ export default defineSchema({
 		serverName: v.string(),
 		serverUrl: v.string(),
 		description: v.optional(v.string()),
+		tools: v.optional(v.array(v.object({
+			name: v.string(),
+			description: v.optional(v.string()),
+			inputSchema: v.optional(v.any()),
+		}))),
+		lastToolsUpdate: v.optional(v.number()),
 		createdAt: v.number(),
 	})
 		.index('by_user', ['userId'])
