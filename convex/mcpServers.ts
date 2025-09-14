@@ -5,6 +5,7 @@ type McpServerTool = {
 	name: string
 	description?: string
 	inputSchema?: Record<string, unknown>
+	enabled: boolean
 }
 
 // Helper function to recursively remove $schema fields from objects
@@ -108,6 +109,7 @@ export const fetchServerTools = action({
 				name: tool.name,
 				description: tool.description,
 				inputSchema: tool.inputSchema ? cleanSchema(tool.inputSchema) as Record<string, unknown> : undefined,
+				enabled: true,
 			}))
 		} catch (error) {
 			console.error(`Failed to fetch tools for server ${args.serverName}:`, error)
@@ -127,6 +129,7 @@ export const addMcpServer = mutation({
 			name: v.string(),
 			description: v.optional(v.string()),
 			inputSchema: v.optional(v.any()),
+			enabled: v.boolean(),
 		}))),
 	},
 	handler: async (ctx, args) => {
@@ -295,14 +298,61 @@ export const updateServerTools = mutation({
 			name: v.string(),
 			description: v.optional(v.string()),
 			inputSchema: v.optional(v.any()),
+			enabled: v.boolean(),
 		})),
 	},
 	handler: async (ctx, args) => {
+		// Get existing server to preserve enabled states
+		const existingServer = await ctx.db.get(args.id)
+		if (!existingServer) {
+			throw new Error('Server not found')
+		}
+
+		// Merge new tools with existing enabled states
+		const existingToolsMap = new Map(
+			(existingServer.tools || []).map(tool => [tool.name, tool.enabled])
+		)
+
+		const updatedTools = args.tools.map(tool => ({
+			...tool,
+			enabled: existingToolsMap.has(tool.name) ? existingToolsMap.get(tool.name)! : tool.enabled,
+		}))
+
 		await ctx.db.patch(args.id, {
-			tools: args.tools,
+			tools: updatedTools,
 			lastToolsUpdate: Date.now(),
 		})
 		return args.id
+	},
+})
+
+export const toggleToolEnabled = mutation({
+	args: {
+		serverId: v.id('mcpServers'),
+		toolName: v.string(),
+		enabled: v.boolean(),
+	},
+	handler: async (ctx, args) => {
+		const server = await ctx.db.get(args.serverId)
+		if (!server) {
+			throw new Error('Server not found')
+		}
+
+		if (!server.tools) {
+			throw new Error('Server has no tools')
+		}
+
+		const updatedTools = server.tools.map(tool => 
+			tool.name === args.toolName 
+				? { ...tool, enabled: args.enabled }
+				: tool
+		)
+
+		await ctx.db.patch(args.serverId, {
+			tools: updatedTools,
+		})
+
+		return args.serverId
 	},
 })
 

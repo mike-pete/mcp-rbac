@@ -12,6 +12,7 @@ export default defineSchema({
 			name: v.string(),
 			description: v.optional(v.string()),
 			inputSchema: v.optional(v.any()),
+			enabled: v.boolean(),
 		}))),
 		lastToolsUpdate: v.optional(v.number()),
 		createdAt: v.number(),

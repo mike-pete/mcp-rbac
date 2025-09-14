@@ -22,7 +22,7 @@ export default function DashboardPage() {
 		serverName: string
 		serverUrl: string
 		description?: string
-		tools?: Array<{ name: string; description?: string }>
+		tools?: Array<{ name: string; description?: string; enabled: boolean }>
 		enabled: boolean
 		userId: string
 		createdAt: number
@@ -45,6 +45,7 @@ export default function DashboardPage() {
 	const toggleServer = useMutation(api.users.toggleServerEnabled)
 	const fetchServerTools = useAction(api.mcpServers.fetchServerTools)
 	const updateServerTools = useMutation(api.mcpServers.updateServerTools)
+	const toggleToolEnabled = useMutation(api.mcpServers.toggleToolEnabled)
 
 	const handleAddServer = async (e: React.FormEvent) => {
 		e.preventDefault()
@@ -111,6 +112,28 @@ export default function DashboardPage() {
 			})
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Failed to toggle server')
+		}
+	}
+
+	const handleToggleToolEnabled = async (serverId: string, toolName: string, enabled: boolean) => {
+		try {
+			await toggleToolEnabled({
+				serverId: serverId as Parameters<typeof toggleToolEnabled>[0]['serverId'],
+				toolName,
+				enabled
+			})
+			
+			// Update the selected server state to reflect the change
+			if (selectedServer && selectedServer._id === serverId) {
+				setSelectedServer({
+					...selectedServer,
+					tools: selectedServer.tools?.map(tool => 
+						tool.name === toolName ? { ...tool, enabled } : tool
+					)
+				})
+			}
+		} catch (err) {
+			setError(err instanceof Error ? err.message : 'Failed to toggle tool')
 		}
 	}
 
@@ -221,14 +244,21 @@ export default function DashboardPage() {
 										{/* Tools pills */}
 										{server.tools && server.tools.length > 0 ? (
 											<div className='flex flex-wrap gap-1.5'>
-												{server.tools.map((tool, index) => (
-													<span 
-														key={index} 
-														className='px-2 py-0.5 bg-neutral-700 text-neutral-300 rounded text-xs font-mono border border-neutral-400'
-													>
-														{tool.name}
-													</span>
-												))}
+												{server.tools.map((tool, index) => {
+													const isEnabled = tool.enabled
+													return (
+														<span 
+															key={index} 
+															className={`px-2 py-0.5 rounded text-xs font-mono border ${
+																isEnabled 
+																	? 'bg-neutral-700 text-neutral-300 border-neutral-400' 
+																	: 'bg-neutral-800 text-neutral-500 border-neutral-600 opacity-60'
+															}`}
+														>
+															{tool.name}
+														</span>
+													)
+												})}
 											</div>
 										) : (
 											<Row className='items-center gap-2 text-xs text-neutral-400'>
@@ -386,12 +416,27 @@ export default function DashboardPage() {
 												<div className="space-y-3">
 													{selectedServer.tools.map((tool, index) => (
 														<div key={index} className="border-b border-neutral-700 pb-3 last:border-0">
-															<div className="font-mono text-sm text-white">{tool.name}</div>
-															{tool.description && (
-																<div className="text-xs text-neutral-400 mt-1 leading-relaxed">
-																	{tool.description}
-																</div>
-															)}
+															<Row className="justify-between items-start gap-3">
+																<Col className="flex-1 min-w-0">
+																	<div className="font-mono text-sm text-white truncate">{tool.name}</div>
+																	{tool.description && (
+																		<div className="text-xs text-neutral-400 mt-1 leading-relaxed">
+																			{tool.description}
+																		</div>
+																	)}
+																</Col>
+																{selectedServer.userId === userId && (
+																	<Switch.Root
+																		checked={tool.enabled}
+																		onCheckedChange={(checked) => {
+																			handleToggleToolEnabled(selectedServer._id, tool.name, checked)
+																		}}
+																		className="relative flex h-4 w-7 cursor-pointer rounded-full bg-neutral-900 p-px shadow-[inset_0_1.5px_2px] shadow-white/20 outline-1 -outline-offset-1 outline-white/30 transition-[background-color,box-shadow] duration-200 ease-out before:absolute before:rounded-full before:outline-offset-2 before:outline-red-300 focus-visible:before:inset-0 focus-visible:before:outline-2 active:bg-neutral-800 data-[checked]:bg-red-400 data-[checked]:shadow-white/30 data-[checked]:outline-white/40 data-[checked]:active:bg-red-300"
+																	>
+																		<Switch.Thumb className="aspect-square h-full rounded-full bg-white shadow-[0_0_1px_1px,0_1px_1px,1px_2px_4px_-1px] shadow-white/20 transition-transform duration-200 data-[checked]:translate-x-3 data-[checked]:shadow-white/30" />
+																	</Switch.Root>
+																)}
+															</Row>
 														</div>
 													))}
 												</div>
