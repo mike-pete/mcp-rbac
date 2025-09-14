@@ -424,37 +424,19 @@ export default function DashboardPage() {
 									{/* Actions */}
 									<div className="border-t border-neutral-700 pt-4">
 										<Row className="justify-between items-center">
-											<Row className="items-center gap-3">
-												{/* Enable/Disable Toggle */}
-												<Row className="items-center gap-2">
-													<label className="text-sm text-neutral-400">Enabled:</label>
-													<Switch.Root
-														checked={selectedServer.enabled}
-														onCheckedChange={(checked) => {
-															handleToggleServer(selectedServer._id, checked)
-															// Update the selected server state to reflect the change
-															setSelectedServer({ ...selectedServer, enabled: checked })
-														}}
-														className="relative flex h-5 w-9 cursor-pointer rounded-full bg-neutral-900 p-px shadow-[inset_0_1.5px_2px] shadow-white/20 outline-1 -outline-offset-1 outline-white/30 transition-[background-color,box-shadow] duration-200 ease-out before:absolute before:rounded-full before:outline-offset-2 before:outline-red-300 focus-visible:before:inset-0 focus-visible:before:outline-2 active:bg-neutral-800 data-[checked]:bg-red-400 data-[checked]:shadow-white/30 data-[checked]:outline-white/40 data-[checked]:active:bg-red-300"
-													>
-														<Switch.Thumb className="aspect-square h-full rounded-full bg-white shadow-[0_0_1px_1px,0_1px_1px,1px_2px_4px_-1px] shadow-white/20 transition-transform duration-200 data-[checked]:translate-x-4 data-[checked]:shadow-white/30" />
-													</Switch.Root>
-												</Row>
-
-												{/* Only show delete if user owns the server */}
-												{selectedServer.userId === userId && (
-													<button
-														onClick={() => {
-															handleDeleteServer(selectedServer._id)
-															setSelectedServer(null)
-														}}
-														className="px-3 py-1.5 bg-red-900/30 text-red-400 rounded-md hover:bg-red-900/50 text-sm font-medium flex items-center gap-2"
-													>
-														<IconTrash size={16} />
-														Delete Server
-													</button>
-												)}
-											</Row>
+											{/* Only show delete if user owns the server */}
+											{selectedServer.userId === userId && (
+												<button
+													onClick={() => {
+														handleDeleteServer(selectedServer._id)
+														setSelectedServer(null)
+													}}
+													className="px-3 py-1.5 bg-red-900/30 text-red-400 rounded-md hover:bg-red-900/50 text-sm font-medium flex items-center gap-2"
+												>
+													<IconTrash size={16} />
+													Delete Server
+												</button>
+											)}
 
 											<Dialog.Close className="px-4 py-2 bg-neutral-700 text-white rounded-md hover:bg-neutral-600 font-medium text-sm">
 												Close
