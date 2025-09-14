@@ -1,19 +1,15 @@
-import { IconCrown } from '@tabler/icons-react'
 import { Tooltip } from '@base-ui-components/react/tooltip'
+import { ReactElement, cloneElement } from 'react'
 
-type CrownIconProps = {
-	size?: number
-	className?: string
+type TooltipWrapperProps = {
+	children: ReactElement
+	content: string
 }
 
-export default function CrownIcon({ size = 16, className = "text-red-300" }: CrownIconProps) {
+export default function TooltipWrapper({ children, content }: TooltipWrapperProps) {
 	return (
 		<Tooltip.Root>
-			<Tooltip.Trigger className="inline-flex items-center">
-				<IconCrown 
-					size={size} 
-					className={className}
-				/>
+			<Tooltip.Trigger render={(props) => cloneElement(children, props)}>
 			</Tooltip.Trigger>
 			<Tooltip.Portal>
 				<Tooltip.Positioner sideOffset={10}>
@@ -34,7 +30,7 @@ export default function CrownIcon({ size = 16, className = "text-red-300" }: Cro
 								/>
 							</svg>
 						</Tooltip.Arrow>
-						MCP Champion
+						{content}
 					</Tooltip.Popup>
 				</Tooltip.Positioner>
 			</Tooltip.Portal>
