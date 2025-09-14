@@ -361,9 +361,26 @@ export default function DashboardPage() {
 
 									{/* Tools Section */}
 									<div>
-										<h3 className="text-sm font-medium text-neutral-400 mb-2">
-											Tools ({selectedServer.tools ? selectedServer.tools.length : 0})
-										</h3>
+										<Row className="justify-between items-center mb-2">
+											<h3 className="text-sm font-medium text-neutral-400">
+												Tools ({selectedServer.tools ? selectedServer.tools.length : 0})
+											</h3>
+											{selectedServer.userId === userId && (
+												<button
+													onClick={() => {
+														handleRefreshTools(selectedServer._id, selectedServer.serverName, selectedServer.serverUrl)
+													}}
+													disabled={refreshingTools === selectedServer._id}
+													className="p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-600 rounded-md disabled:opacity-50"
+													title="Refresh tools"
+												>
+													<IconRefresh 
+														size={16} 
+														className={refreshingTools === selectedServer._id ? 'animate-spin' : ''} 
+													/>
+												</button>
+											)}
+										</Row>
 										{selectedServer.tools && selectedServer.tools.length > 0 ? (
 											<div className="bg-neutral-900 rounded-md p-4 max-h-64 overflow-y-auto">
 												<div className="space-y-3">
@@ -424,34 +441,18 @@ export default function DashboardPage() {
 													</Switch.Root>
 												</Row>
 
-												{/* Only show refresh and delete if user owns the server */}
+												{/* Only show delete if user owns the server */}
 												{selectedServer.userId === userId && (
-													<>
-														<button
-															onClick={() => {
-																handleRefreshTools(selectedServer._id, selectedServer.serverName, selectedServer.serverUrl)
-															}}
-															disabled={refreshingTools === selectedServer._id}
-															className="px-3 py-1.5 bg-neutral-700 text-white rounded-md hover:bg-neutral-600 disabled:opacity-50 text-sm font-medium flex items-center gap-2"
-														>
-															<IconRefresh 
-																size={16} 
-																className={refreshingTools === selectedServer._id ? 'animate-spin' : ''} 
-															/>
-															Refresh Tools
-														</button>
-														
-														<button
-															onClick={() => {
-																handleDeleteServer(selectedServer._id)
-																setSelectedServer(null)
-															}}
-															className="px-3 py-1.5 bg-red-900/30 text-red-400 rounded-md hover:bg-red-900/50 text-sm font-medium flex items-center gap-2"
-														>
-															<IconTrash size={16} />
-															Delete Server
-														</button>
-													</>
+													<button
+														onClick={() => {
+															handleDeleteServer(selectedServer._id)
+															setSelectedServer(null)
+														}}
+														className="px-3 py-1.5 bg-red-900/30 text-red-400 rounded-md hover:bg-red-900/50 text-sm font-medium flex items-center gap-2"
+													>
+														<IconTrash size={16} />
+														Delete Server
+													</button>
 												)}
 											</Row>
 
