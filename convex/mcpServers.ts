@@ -224,6 +224,7 @@ export const getUserEnabledMcpServers = query({
 					id: server._id,
 					name: server.serverName,
 					url: server.serverUrl,
+					tools: server.tools || [],
 					enabled: true,
 				}
 			})
