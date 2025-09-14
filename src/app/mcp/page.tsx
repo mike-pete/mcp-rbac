@@ -137,8 +137,11 @@ export default function DashboardPage() {
 
 	return (
 		<Col className='p-6 gap-6 w-full flex-grow min-h-screen'>
-			{/* Add Server Button */}
-			<div className='flex justify-end'>
+			{/* Page Header */}
+			<div className='flex justify-between items-center'>
+				<h1 className='text-2xl font-bold text-white'>
+					{primaryOrganization ? `${primaryOrganization.name} - MCP Servers` : 'MCP Servers'}
+				</h1>
 				<button
 					onClick={() => setShowAddServerDialog(true)}
 					disabled={!userId || !primaryOrganization}
@@ -150,9 +153,6 @@ export default function DashboardPage() {
 
 			{/* Organization Servers Section */}
 			<div className='bg-neutral-800 rounded-lg shadow p-6'>
-				<Row className='justify-between items-center mb-4'>
-					<h2 className='text-xl font-semibold text-white'>MCP Servers</h2>
-				</Row>
 
 				{orgLoading ? (
 					<p className='text-neutral-400'>Loading user info...</p>

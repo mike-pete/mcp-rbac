@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 
 type UserOrganization = {
 	id: string
+	name: string
 	membershipId: string
 	role?: string
 	status: string

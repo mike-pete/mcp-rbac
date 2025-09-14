@@ -19,13 +19,19 @@ export async function GET() {
 			statuses: ['active'] // Only get active memberships
 		})
 
-		// Return the user's organizations
-		const organizations = memberships.data.map(membership => ({
-			id: membership.organizationId,
-			membershipId: membership.id,
-			role: membership.role?.slug,
-			status: membership.status
-		}))
+		// Fetch organization details for each membership
+		const organizations = await Promise.all(
+			memberships.data.map(async (membership) => {
+				const organization = await workos.organizations.getOrganization(membership.organizationId)
+				return {
+					id: membership.organizationId,
+					name: organization.name,
+					membershipId: membership.id,
+					role: membership.role?.slug,
+					status: membership.status
+				}
+			})
+		)
 
 		return NextResponse.json({
 			userId: user.id,
