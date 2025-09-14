@@ -18,7 +18,8 @@
       "mcp__workos__workos_search",
       "mcp__workos__workos_docs",
       "Bash(npm run lint)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(bun add:*)"
     ],
     "deny": []
   }

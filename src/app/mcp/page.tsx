@@ -10,6 +10,10 @@ import { Switch } from '@base-ui-components/react/switch'
 import { Dialog } from '@base-ui-components/react/dialog'
 import { Tooltip } from '@base-ui-components/react/tooltip'
 import { IconTrash, IconRefresh, IconTool, IconSettings } from '@tabler/icons-react'
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+
+dayjs.extend(relativeTime)
 
 export default function DashboardPage() {
 	const [serverName, setServerName] = useState('')
@@ -426,19 +430,26 @@ export default function DashboardPage() {
 												Tools ({selectedServer.tools ? selectedServer.tools.length : 0})
 											</h3>
 											{selectedServer.userId === userId && (
-												<button
-													onClick={() => {
-														handleRefreshTools(selectedServer._id, selectedServer.serverName, selectedServer.serverUrl)
-													}}
-													disabled={refreshingTools === selectedServer._id}
-													className="p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-600 rounded-md disabled:opacity-50"
-													title="Refresh tools"
-												>
-													<IconRefresh 
-														size={16} 
-														className={refreshingTools === selectedServer._id ? 'animate-spin' : ''} 
-													/>
-												</button>
+												<Row className="items-center gap-2">
+													{selectedServer.lastToolsUpdate && (
+														<span className="text-xs text-neutral-500">
+															Updated {dayjs(selectedServer.lastToolsUpdate).fromNow()}
+														</span>
+													)}
+													<button
+														onClick={() => {
+															handleRefreshTools(selectedServer._id, selectedServer.serverName, selectedServer.serverUrl)
+														}}
+														disabled={refreshingTools === selectedServer._id}
+														className="p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-600 rounded-md disabled:opacity-50"
+														title="Refresh tools"
+													>
+														<IconRefresh 
+															size={16} 
+															className={refreshingTools === selectedServer._id ? 'animate-spin' : ''} 
+														/>
+													</button>
+												</Row>
 											)}
 										</Row>
 										{selectedServer.tools && selectedServer.tools.length > 0 ? (
@@ -503,25 +514,6 @@ export default function DashboardPage() {
 										)}
 									</div>
 
-									{/* Metadata */}
-									<div className="grid grid-cols-2 gap-4 text-sm">
-										<div>
-											<h3 className="text-neutral-400 mb-1">Created</h3>
-											<p className="text-neutral-300">
-												{new Date(selectedServer.createdAt).toLocaleDateString()} at{' '}
-												{new Date(selectedServer.createdAt).toLocaleTimeString()}
-											</p>
-										</div>
-										{selectedServer.lastToolsUpdate && (
-											<div>
-												<h3 className="text-neutral-400 mb-1">Last Tools Update</h3>
-												<p className="text-neutral-300">
-													{new Date(selectedServer.lastToolsUpdate).toLocaleDateString()} at{' '}
-													{new Date(selectedServer.lastToolsUpdate).toLocaleTimeString()}
-												</p>
-											</div>
-										)}
-									</div>
 
 									{/* Actions */}
 									<div className="border-t border-neutral-700 pt-4">
